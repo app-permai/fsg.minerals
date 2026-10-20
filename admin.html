@@ -1,0 +1,88 @@
+<!doctype html><html lang="ms"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — FSG Minerals</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<style>
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.08em;color:var(--brand)}
+.pill{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.p-pending{background:#fef9c3;color:#854d0e}.p-confirmed{background:#dbeafe;color:#1d4ed8}
+.p-invoiced{background:#e0e7ff;color:#4338ca}.p-issued{background:#ffedd5;color:#9a3412}
+.p-paid{background:#dcfce7;color:#166534}.p-void,.p-cancelled{background:#fee2e2;color:#991b1b}
+.p-sent{background:#dcfce7;color:#166534}.p-failed{background:#fee2e2;color:#991b1b}.p-skipped{background:#f1f5f9;color:#475569}
+.rowbtns{display:flex;gap:6px;flex-wrap:wrap}
+.rowbtns .btn{min-height:32px;padding:5px 10px;font-size:11px}
+#gate{max-width:420px;margin:60px auto}
+#app{display:none}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+@media(max-width:800px){.cards{grid-template-columns:repeat(2,1fr)}}
+.kard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.kard strong{font-family:"Playfair Display";font-size:22px}
+.kard span{font-size:11px;color:var(--muted);font-weight:800}
+</style></head><body>
+<header class="site"><div class="container nav">
+<a class="brandbox" href="index.html"><img src="assets/fsg-globe.jpg" alt="Logo bumi FSG" class="brand-logo" onerror="this.style.display='none'"><span><span class="company-name">FSG Admin</span><div class="reg-number">Dalaman — bukan halaman awam</div></span></a>
+<nav class="menu"><a href="index.html">Home</a><a href="market-tool.html">Market Tool</a><a href="#" id="logoutLink">Log Keluar</a></nav></div></header>
+<div class="container">
+<div id="gate" class="card"><h3>Log Masuk Staf</h3><p>Masukkan token admin (disimpan dalam browser ini sahaja).</p>
+<label>Token Admin</label><input id="tokenInput" type="password" placeholder="FSG-ADMIN-...">
+<div style="margin-top:12px"><button class="btn primary" style="width:100%" onclick="saveToken()">Masuk</button></div>
+<p id="gateMsg" style="font-size:12px;color:#b91c1c"></p></div>
+<div id="app">
+<section><h2 class="sec-title">Ringkasan</h2><div class="cards">
+<div class="kard"><strong id="cQ">-</strong><br><span>SEBUTHARGA (RM)</span><div style="font-size:12px" id="cQt"></div></div>
+<div class="kard"><strong id="cI">-</strong><br><span>INVOIS KELUAR (RM)</span></div>
+<div class="kard"><strong id="cP">-</strong><br><span>SUDAH BAYAR (RM)</span></div>
+<div class="kard"><strong id="cN">-</strong><br><span>BILANGAN SEBUTHARGA</span></div>
+</div></section>
+<section><h2 class="sec-title">Sebutharga</h2>
+<div style="margin-bottom:10px"><select id="qFilter" style="max-width:220px" onchange="loadQuotes()"><option value="all">Semua status</option><option value="pending">pending</option><option value="confirmed">confirmed</option><option value="invoiced">invoiced</option><option value="cancelled">cancelled</option></select>
+<button class="btn" onclick="loadAll()">🔄 Muat Semula</button></div>
+<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Nombor</th><th>Client</th><th>Item</th><th>Jumlah</th><th>Status</th><th>Tindakan</th></tr></thead><tbody id="qRows"></tbody></table></div></section>
+<section><h2 class="sec-title">Invois</h2>
+<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Nombor</th><th>Client</th><th>Item</th><th>Jumlah</th><th>Status</th><th>Tindakan</th></tr></thead><tbody id="iRows"></tbody></table></div></section>
+</div></div>
+<footer><div class="container">FSG Admin Dalaman • <a href="https://accounts.zoho.com" target="_blank" rel="noopener">Staff Login</a></div></footer>
+<script>
+const API='https://wjrlcbhmklodrtpuhprq.supabase.co/functions/v1/admin-api';
+const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcmxjYmhta2xvZHJ0cHVocHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1MjIyODMsImV4cCI6MjEwODA5ODI4M30.y-Exdo9Aw9HPr57EvRglRvjQO072ZHcJZMNFiPBwHZQ';
+const pill=s=>'<span class="pill p-'+s+'">'+s+'</span>';
+function token(){return localStorage.getItem('fsg_admin_token')||''}
+async function call(action,params){
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','apikey':ANON,'x-admin-token':token()},body:JSON.stringify({action,...(params||{})})});
+  const j=await r.json();
+  if(r.status===401){localStorage.removeItem('fsg_admin_token');location.reload();throw new Error('Token salah')}
+  if(!r.ok||!j.ok) throw new Error(j.error||('Ralat '+r.status));
+  return j;
+}
+function saveToken(){const v=document.getElementById('tokenInput').value.trim();if(!v)return;localStorage.setItem('fsg_admin_token',v);boot()}
+document.getElementById('logoutLink').onclick=e=>{e.preventDefault();localStorage.removeItem('fsg_admin_token');location.reload()};
+const rm=x=>'RM '+Number(x||0).toFixed(2);
+async function boot(){
+  if(!token())return;
+  document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';
+  try{await loadAll()}catch(e){document.getElementById('gate').style.display='block';document.getElementById('app').style.display='none';document.getElementById('gateMsg').textContent=e.message}
+}
+async function loadAll(){const o=await call('overview');
+  document.getElementById('cQ').textContent=rm(o.quotes_total_myr);document.getElementById('cQt').textContent=o.quotes_count+' sebutharga';
+  document.getElementById('cI').textContent=rm(o.invoices_issued_myr);document.getElementById('cP').textContent=rm(o.invoices_paid_myr);document.getElementById('cN').textContent=o.quotes_count;
+  await loadQuotes();await loadInvoices();}
+async function loadQuotes(){const f=document.getElementById('qFilter').value;const j=await call('quotes.list',{status:f});
+  document.getElementById('qRows').innerHTML=j.rows.map(q=>'<tr><td><b>'+q.number+'</b><br>'+new Date(q.created_at).toLocaleString('ms-MY')+'</td><td>'+esc(q.name)+'<br>'+esc(q.email)+'</td><td>'+q.mineral+'<br>'+q.quantity+' '+q.unit+'</td><td>'+rm(q.amount_myr)+'<br>emel:'+pill(q.email_status)+'</td><td>'+pill(q.status)+'</td><td><div class="rowbtns">'+
+  (q.status==='pending'?'<button class="btn primary" onclick="qStatus(\''+q.number+'\',\'confirmed\')">Sahkan</button><button class="btn" onclick="qStatus(\''+q.number+'\',\'cancelled\')">Batal</button>':'')+
+  ((q.status==='pending'||q.status==='confirmed')?'<button class="btn primary" onclick="convert(\''+q.number+'\')">→ Invois</button>':'')+
+  '<button class="btn" onclick="quotePdf(\''+q.number+'\')">PDF</button></div></td></tr>').join('')||'<tr><td colspan="6">Tiada rekod</td></tr>';}
+async function loadInvoices(){const j=await call('invoices.list');
+  document.getElementById('iRows').innerHTML=j.rows.map(v=>'<tr><td><b>'+v.number+'</b><br>ref:'+(v.quote_number||'-')+'<br>'+new Date(v.created_at).toLocaleString('ms-MY')+'</td><td>'+esc(v.name)+'<br>'+esc(v.email)+'</td><td>'+v.mineral+'<br>'+v.quantity+' '+v.unit+'</td><td>'+rm(v.amount_myr)+'</td><td>'+pill(v.status)+'</td><td><div class="rowbtns">'+
+  (v.status==='issued'?'<button class="btn primary" onclick="iPaid(\''+v.number+'\')">Bayar</button><button class="btn" onclick="iVoid(\''+v.number+'\')">Void</button>':'')+
+  '<button class="btn" onclick="invPdf(\''+v.number+'\')">PDF</button></div></td></tr>').join('')||'<tr><td colspan="6">Tiada rekod</td></tr>';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function qStatus(n,s){if(!confirm(s+' '+n+'?'))return;await call('quotes.set-status',{number:n,status:s});await loadAll()}
+async function convert(n){if(!confirm('Tukar '+n+' ke invois + jana PDF?'))return;const j=await call('quotes.convert',{number:n});alert('Invois '+j.invoice+' ('+rm(j.amount_myr)+')');if(j.invoice_url)window.open(j.invoice_url,'_blank');await loadAll()}
+async function iPaid(n){if(!confirm('Tandai '+n+' sudah bayar?'))return;await call('invoices.paid',{number:n});await loadAll()}
+async function iVoid(n){if(!confirm('Void '+n+'?'))return;await call('invoices.void',{number:n});await loadAll()}
+async function quotePdf(n){const j=await call('docs.url',{path:'quotes/'+n+'.pdf'}).catch(()=>call('quotes.convert',{number:n}).then(async()=>await call('docs.url',{path:'quotes/'+n+'.pdf'})));window.open(j.url||j.quote_url,'_blank')}
+async function invPdf(n){const v=(await call('invoices.list')).rows.find(r=>r.number===n);const j=await call('docs.url',{path:'invoices/'+n+'.pdf'});window.open(j.url,'_blank')}
+boot();
+</script>
+</body></html>

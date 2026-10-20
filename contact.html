@@ -1,0 +1,42 @@
+<!doctype html><html lang="ms"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact — FSG Minerals</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/fsg-logo.jpg"></head><body>
+<header class="site"><div class="container nav">
+<a class="brandbox" href="index.html"><img src="assets/fsg-globe.jpg" alt="Logo bumi FSG" class="brand-logo" onerror="this.style.display='none'"><span><span class="company-name">First Strategic Global Sdn. Bhd.</span><div class="reg-number">202601003838 (1665935-K)</div><span class="tagline">Global Minerals Supply Chain</span></span></a>
+<nav class="menu"><a href="index.html">Home</a><a href="minerals.html">Minerals</a><a href="market-tool.html">Market Tool</a><a href="contact.html" class="active">Contact</a><a href="https://accounts.zoho.com" target="_blank" rel="noopener">🔒 Staff Login</a></nav></div></header>
+<div class="container"><section>
+<h2 class="sec-title">Hubungi FSG</h2><p class="sec-sub">Enquiry terus ke pasukan FSG. Tiada data disimpan selain dalam browser anda.</p>
+<div style="display:grid;grid-template-columns:1.1fr .9fr;gap:16px">
+<div class="card"><label>Nama *</label><input id="qName" placeholder="Nama penuh">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Email *</label><input id="qEmail" placeholder="you@company.com"></div><div><label>Syarikat</label><input placeholder="Company"></div></div>
+<label>Mineral minat</label><select id="qMin"><option value="COPPER">Copper</option><option value="TITA">Titanium</option><option value="LITH">Lithium</option><option value="COLTAN">Coltan</option><option value="TANT">Tantalum</option><option value="AURUM">Aurum</option><option value="SILVER">Silver</option><option value="TIN">Timah</option><option value="ALU">Aluminium</option></select>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Kuantiti *</label><input id="qQty" type="number" value="100" min="0" step="any"></div><div><label>Unit</label><select id="qUnit"><option value="g">gram (g)</option><option value="kg">kilogram (kg)</option><option value="oz">auns (oz)</option><option value="t">tan metrik</option></select></div></div>
+<label>Kuantiti + mesej</label><textarea id="qMsg" rows="4" placeholder="cth: 10 tan copper concentrate, CIF Penang..."></textarea>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" id="qSubmit" onclick="sendMail()">✉️ Hantar & Jana Sebutharga</button></div><p id="msg" style="font-size:13px;color:var(--brand);white-space:pre-line"></p></div>
+<div class="panel"><h3>Maklumat Syarikat</h3><p>FIRST STRATEGIC GLOBAL SDN. BHD.<br>202601003838 (1665935-K)<br>fsgminerals.trade<br>info@fsgminerals.trade<br>Operasi: Somaliland, Africa</p><p>Sediakan: berat, gred/assay, lokasi & foto. Minta assay XRF untuk sebutharga pantas.</p><a class="btn" style="background:#fff" href="market-tool.html">Buka Kalkulator →</a></div>
+</div></section></div>
+<footer><div class="container">© 2026 FIRST STRATEGIC GLOBAL SDN BHD • info@fsgminerals.trade • <a href="https://accounts.zoho.com" target="_blank" rel="noopener">🔒 Staff Login</a> • <a href="admin.html">Admin</a></div></footer>
+<script>
+const FSG_FN_URL='https://wjrlcbhmklodrtpuhprq.supabase.co/functions/v1/create-quote';
+const FSG_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcmxjYmhta2xvZHJ0cHVocHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1MjIyODMsImV4cCI6MjEwODA5ODI4M30.y-Exdo9Aw9HPr57EvRglRvjQO072ZHcJZMNFiPBwHZQ';
+async function sendMail(){
+  const btn=document.getElementById('qSubmit'), msg=document.getElementById('msg');
+  const body={name:document.getElementById('qName').value, email:document.getElementById('qEmail').value,
+    mineral:document.getElementById('qMin').value, quantity:parseFloat(document.getElementById('qQty').value),
+    unit:document.getElementById('qUnit').value, message:document.getElementById('qMsg').value};
+  if(!body.name||!body.email){alert('Isi nama & email');return}
+  btn.disabled=true; msg.textContent='Menghantar...';
+  try{
+    const r=await fetch(FSG_FN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':FSG_ANON_KEY},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!r.ok||!j.ok) throw new Error(j.error||('Ralat '+r.status));
+    msg.textContent='✅ Sebutharga '+j.number+' dijana.\nAnggaran rujukan: RM '+Number(j.amount_myr).toFixed(2)+
+      (j.email_status==='sent'?'\nSalinan dihantar ke email anda.':j.email_status==='failed'?'\nEmel gagal dihantar — pasukan FSG akan hubungi anda.':'\nPasukan FSG akan emel sebutharga rasmi.');
+  }catch(e){
+    msg.textContent='Gagal hantar automatik ('+e.message+'). Membuka emel manual...';
+    location.href='mailto:info@fsgminerals.trade?subject='+encodeURIComponent('Enquiry FSG - '+body.name)+'&body='+encodeURIComponent(body.name+'\n'+body.email+'\n'+body.mineral+' '+body.quantity+body.unit+'\n'+(body.message||''));
+  }finally{btn.disabled=false}
+}
+</script>
+</body></html>
