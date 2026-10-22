@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSG Market Tool — Premium Terminal | FSG Minerals</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/fsg-logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#FFFFFF">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('fsg-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+:root{
+  --bg0:#FFFFFF; --bg:#F3F7F4; --panel:#FFFFFF; --card:#FFFFFF; --card2:#F7FAF8;
+  --gold:#0E7A52; --gold2:#0B5C3F; --gold-deep:#0B5C3F;
+  --text:#1C2621; --muted:#5D7067; --border:#DCE7E0; --border2:#0E7A52;
+  --green:#15803d; --red:#dc2626;
+  --brand-black:#22262B; --brand-green:#2FA968; --brand-green2:#0E7A52;
+  --radius:20px; --shadow:0 16px 40px rgba(20,40,30,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Manrope,system-ui,sans-serif;background:
+  radial-gradient(1000px 400px at 15% 0%, rgba(14,122,82,.08), transparent 60%),
+  var(--bg0);color:var(--text);line-height:1.6}
+h1,h2,.serif{font-family:"Playfair Display",serif;letter-spacing:-.02em}
+.container{max-width:1240px;margin:0 auto;padding:0 20px}
+a{color:var(--gold)}
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid var(--border)}
+.top-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap}
+.brand{display:flex;gap:14px;align-items:center}
+.monogram{width:138px;height:58px;border-radius:12px;background:#fff;display:grid;place-items:center;padding:4px 8px;overflow:hidden;border:1px solid var(--border)}
+.monogram svg{width:100%;height:100%;display:block}
+.brand h1{font-size:22px;margin:0;color:var(--brand-black)}.brand h1 span{color:var(--gold)}
+.sub-co{font-size:11px;letter-spacing:.22em;font-weight:800;color:var(--gold)}
+.badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.badge{font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--gold);background:rgba(14,122,82,.08)}
+.badge.solid{background:linear-gradient(135deg,#0E7A52,#0B5C3F);color:#fff;border:none}
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--border);background:#fff;color:var(--text);padding:11px 16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-height:42px;transition:.2s}
+.btn:hover{transform:translateY(-1px);border-color:var(--gold);box-shadow:0 10px 24px rgba(14,122,82,.16)}
+.btn.primary{background:linear-gradient(135deg,#0E7A52,#0B5C3F);color:#fff;border:none;box-shadow:0 10px 24px rgba(14,122,82,.32)}
+.btn.small{padding:8px 12px;min-height:36px;font-size:12px;border-radius:10px}
+/* ticker */
+.ticker-wrap{overflow:hidden;background:linear-gradient(90deg,#0B2E21,#0E7A52);border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
+.ticker{display:inline-block;padding:10px 0;animation:scroll 42s linear infinite;font-size:13px;font-weight:700;color:#E9F5EE}
+.ticker b{color:#fff}.up{color:#86EFAC}.down{color:#FCA5A5}
+@keyframes scroll{to{transform:translateX(-50%)}}
+/* hero */
+.hero{padding:48px 0 10px;display:grid;grid-template-columns:1.3fr .7fr;gap:24px;align-items:end}
+@media(max-width:900px){.hero{grid-template-columns:1fr}}
+.kicker{font-size:11px;letter-spacing:.28em;font-weight:800;color:var(--gold)}
+.hero h2{font-size:clamp(32px,5vw,56px);line-height:1.05;margin:10px 0;color:#101815}
+.hero h2 em{font-style:normal;background:linear-gradient(135deg,#0E7A52,#0B5C3F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:640px;font-size:15px}
+.hero-stats{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.stat{background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px 16px;min-width:140px;box-shadow:0 8px 20px rgba(20,40,30,.06)}
+.stat strong{font-size:20px;font-family:"Playfair Display";color:#101815}.stat span{font-size:11px;color:var(--muted);letter-spacing:.08em;font-weight:800}
+.terminal-card{background:linear-gradient(135deg,#0B2E21,#0E7A52);border:1px solid #0B5C3F;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;color:#fff}
+.terminal-card::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,#7BD89A,transparent)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.18);display:inline-block;margin-right:8px;animation:pulse 1.8s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(34,197,94,.05)}}
+/* controls */
+.controls{display:flex;gap:14px;flex-wrap:wrap;align-items:end;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:18px 0;box-shadow:var(--shadow)}
+.seg{display:flex;background:#EEF3F0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.seg button{border:none;background:transparent;color:var(--muted);padding:11px 16px;font-weight:800;font-size:12px;cursor:pointer;min-height:42px}
+.seg button.active{background:linear-gradient(135deg,#0E7A52,#0B5C3F);color:#fff}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--gold);margin-bottom:6px;display:block}
+/* grid */
+.grid-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:980px){.grid-prices{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.grid-prices{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;position:relative;overflow:hidden;transition:.25s;box-shadow:0 10px 28px rgba(20,40,30,.06)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#0E7A52,#0B5C3F,transparent)}
+.card:hover{transform:translateY(-5px);border-color:var(--gold);box-shadow:0 20px 44px rgba(14,122,82,.18)}
+.card h3{margin:0;font-size:16px;font-family:Manrope;font-weight:800;color:#16211C}.sym{font-size:11px;color:var(--gold);font-weight:800;letter-spacing:.06em}
+.price{font-family:"Playfair Display";font-size:30px;margin:8px 0 0;color:#101815}.price small{font-family:Manrope;font-size:12px;color:var(--muted);font-weight:600}
+.chg{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;margin-top:6px;display:inline-block}
+.chg.up{background:rgba(21,128,61,.12);color:#15803d;border:1px solid rgba(21,128,61,.25)}
+.chg.down{background:rgba(220,38,38,.1);color:#b91c1c;border:1px solid rgba(220,38,38,.25)}
+.meta{font-size:11px;color:var(--muted);margin-top:8px}
+.spark{width:100%;height:42px;margin-top:10px}
+/* blocks */
+section.block{margin:22px 0;background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+section.block h2{font-size:26px;margin:0 0 4px;color:#101815}section.block h2 span{color:var(--gold)}
+.sub{font-size:13px;color:var(--muted);margin:0 0 16px;max-width:820px}
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+input,select,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:15px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(14,122,82,.15)}
+canvas.chart{width:100%!important;height:280px;background:#F8FAF9;border-radius:14px;border:1px solid var(--border)}
+.result{background:linear-gradient(135deg,rgba(14,122,82,.12),rgba(14,122,82,.04));border:1px solid var(--gold);border-radius:14px;padding:14px;margin-top:12px}
+.result div{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px dashed rgba(14,122,82,.3);color:#1C2621}
+.result div:last-child{border:none;font-weight:800;font-size:16px;color:var(--gold)}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.links a{font-size:12px;font-weight:700;padding:8px 14px;border:1px solid var(--border);border-radius:999px;text-decoration:none;background:rgba(14,122,82,.07);color:var(--gold)}
+footer{margin-top:28px;border-top:2px solid var(--gold);background:#0B2E21;padding:26px 0 40px;color:#C9D6CF;font-size:12px}
+.reveal{opacity:0;transform:translateY(18px);transition:.7s}.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.ticker{animation:none;white-space:normal}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body class="tool-page">
+<header><div class="container top-inner">
+<div class="brand"><div class="monogram" aria-label="Logo bumi FSG" style="width:56px;height:56px;padding:0;overflow:hidden;border-radius:14px">
+<img src="assets/fsg-globe.jpg" alt="Logo bumi FSG" style="width:56px;height:56px;object-fit:cover;border-radius:14px;display:block" onerror="this.outerHTML='<b>FSG</b>'"></div><div>
+<div class="sub-co">FIRST STRATEGIC GLOBAL • 202601003838 (1665935-K)</div>
+<h1>FSG <span>Market Terminal</span></h1>
+<div class="badges"><span class="badge solid">GLOBAL MINERALS SUPPLY CHAIN</span><span class="badge">9 MINERAL</span><span class="badge" id="modeBadge">● LIVE PREMIUM</span></div>
+</div></div>
+<div class="top-actions"><span class="seg"><button>EN</button><button class="active">MS</button></span>
+<a class="btn small" href="index.html">Home</a><a class="btn small" href="minerals.html">Minerals</a><a class="btn small" href="contact.html">Contact</a><a class="btn small" href="https://accounts.zoho.com" target="_blank" rel="noopener">🔒 Staff Login</a>
+<button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Tukar ke mod gelap" title="Tukar ke mod gelap"><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span class="tt-label"><span class="tt-dark">Gelap</span><span class="tt-light">Cerah</span></span></button>
+<a class="btn small primary" href="/cdn-cgi/l/email-protection#61080f070e210712060c080f0413000d124f1513000504">✉️ Minta Sebutharga</a></div>
+</div><div class="ticker-wrap"><div class="ticker" id="ticker"></div></div></header>
+
+<div class="container">
+<div class="hero">
+<div><div class="kicker">SOMALILAND • AFRICA — INSTITUTIONAL GRADE</div>
+<h2>Harga mineral <em>gred premium,</em> dalam satu terminal.</h2>
+<p>Terminal rujukan FSG untuk Kuprum, Titanium, Litium, Koltan, Tantalum, Aurum, Perak, Timah & Aluminium. Rujukan LME / LBMA / Fastmarkets dengan kemasan gred pelaburan.</p>
+<div class="hero-stats">
+<div class="stat"><strong>9</strong><br><span>MINERAL FSG</span></div>
+<div class="stat"><strong>RM 4.70</strong><br><span>USD → MYR</span></div>
+<div class="stat"><strong>LME</strong><br><span>RUJUKAN SAH</span></div>
+<div class="stat"><strong>24H</strong><br><span>SPOT + TREND</span></div>
+</div></div>
+<div class="terminal-card"><div style="font-size:12px;font-weight:800;letter-spacing:.12em;color:#8FDCB0"><span class="live-dot"></span>TERMINAL STATUS</div>
+<div style="font-family:Playfair Display;font-size:28px;margin:8px 0;color:#fff">Sesi Pasaran Aktif</div>
+<div style="font-size:13px;color:#C9D6CF">Kadar USD-MYR: <b style="color:#fff" id="rateTxt">4.7000</b> • <span id="updateInfo">21/10/2026</span></div>
+<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn primary" style="background:#fff;color:#0B2E21" onclick="refresh()">🔄 Refresh</button><button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" onclick="document.getElementById('kalkulator').scrollIntoView({behavior:'smooth'})">Kalkulator →</button></div>
+</div>
+</div>
+
+<div class="controls reveal">
+<div><span class="lbl">MATAWANG</span><div class="seg" id="curSeg"><button data-cur="USD">USD $</button><button data-cur="MYR" class="active">MYR RM</button></div></div>
+<div><span class="lbl">UNIT</span><div class="seg" id="unitSeg"><button data-unit="oz">oz</button><button data-unit="g" class="active">gram</button><button data-unit="kg">kg</button><button data-unit="t">tan</button></div></div>
+<div style="flex:1"></div>
+<div style="font-size:12px;color:var(--muted)">Harga rujukan sahaja • Sahkan di lme.com / fastmarkets.com sebelum berurusan</div>
+</div>
+
+<section class="block reveal" id="harga">
+<h2>💰 Harga <span>Rujukan Live</span></h2>
+<p class="sub">Kad premium dengan sparkline 24-jam. Klik sumber untuk pengesahan LME / Fastmarkets / LBMA.</p>
+<div class="grid-prices" id="priceGrid"></div>
+<div class="links"><span style="font-size:12px;font-weight:800">SAHKAN DI:</span>
+<a href="https://www.lme.com" target="_blank">lme.com</a><a href="https://www.fastmarkets.com" target="_blank">fastmarkets.com</a><a href="https://www.mining.com" target="_blank">mining.com</a><a href="https://fsgminerals.trade" target="_blank">FSG Minerals</a></div>
+</section>
+
+<section class="block reveal">
+<h2>📈 Carta <span>Pasaran</span></h2>
+<p class="sub">Simulasi 30-hari untuk ilustrasi dari harga semasa + volatiliti. Bar per-kg dalam MYR.</p>
+<div class="two"><div><span class="lbl">MINERAL UNTUK CARTA</span><select id="chartSelect"></select><div style="height:8px"></div><canvas class="chart" id="lineChart" width="600" height="280"></canvas><p class="meta" id="lineNote"></p></div>
+<div><span class="lbl">NILAI PER-KG (MYR)</span><canvas class="chart" id="barChart" width="600" height="280"></canvas></div></div>
+</section>
+
+<section class="block reveal" id="kalkulator">
+<h2>🧮 Kalkulator <span>Nilai Mineral</span></h2>
+<p class="sub">Kira dari spot semasa. Hantar hasil ke <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e0898e868fa08693878d898e8592818c93ce9492818485">[email&#160;protected]</a> untuk sebutharga rasmi FSG.</p>
+<div class="two"><div>
+<div class="seg" id="modeSeg" style="margin-bottom:10px"><button data-mode="jual" class="active">Saya Penjual</button><button data-mode="beli">Saya Pembeli</button></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><span class="lbl">MINERAL</span><select id="calcMineral"></select></div>
+<div><span class="lbl">BERAT</span><input type="number" id="calcWeight" value="100"></div>
+<div><span class="lbl">UNIT</span><select id="calcUnit"><option value="g">gram (g)</option><option value="kg">kilogram (kg)</option><option value="oz">auns (oz)</option><option value="t">tan metrik</option></select></div>
+<div><span class="lbl">PREMIUM %</span><input type="number" id="calcPrem" value="5"></div>
+</div>
+<span class="lbl" style="margin-top:10px">KETULENAN %</span><input type="range" id="calcSlider" min="10" max="100" value="99.9" step="0.1"><div id="sliderVal" style="font-size:12px;color:var(--gold2);font-weight:800"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+<div><span class="lbl">LOGISTIK (RM)</span><input type="number" id="calcLog" value="50"></div>
+<div><span class="lbl">SPOT RUJUKAN</span><input id="calcSpot" readonly></div>
+</div></div>
+<div><div class="result" id="calcResult"></div>
+<button class="btn primary" style="width:100%;margin-top:12px" onclick="location.href='mailto:info@fsgminerals.trade'">✉️ Hantar Hasil ke FSG</button>
+<div class="meta" id="calcFormula" style="margin-top:10px"></div>
+</div></div>
+</section>
+
+<section class="block reveal">
+<h2>🔔 Enquiry <span>FSG</span></h2>
+<p class="sub">Terus ke pasukan FSG. Tiada data disimpan selain dalam browser anda.</p>
+<div class="two"><div style="display:grid;gap:10px">
+<input id="qName" placeholder="Nama penuh *"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input id="qEmail" placeholder="Email *"><input placeholder="Syarikat"></div>
+<textarea id="qMsg" placeholder="cth: 10 tan copper concentrate, CIF Penang..."></textarea>
+</div><div style="display:grid;gap:10px;align-content:start">
+<div class="terminal-card"><div style="font-weight:800;color:var(--gold2)">Concierge FSG</div><div style="font-size:13px;color:var(--muted)">Sediakan berat, gred/assay, lokasi & foto. Minta assay XRF untuk sebutharga pantas.</div>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" onclick="location.href='mailto:info@fsgminerals.trade'">✉️ Email FSG</button></div>
+<p class="meta" id="copyMsg"></p></div></div></div>
+</section>
+</div>
+<footer><div class="container">⚠️ <b style="color:var(--gold)">Penafian FSG:</b> Harga rujukan dari sumber awam + input manual LME/Fastmarkets. Bukan nasihat pelaburan. © 2026 FIRST STRATEGIC GLOBAL SDN BHD (1665935-K) • <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f39a9d959cb39580949e9a9d9681929f80dd8781929796">[email&#160;protected]</a> • <a href="https://accounts.zoho.com" target="_blank" rel="noopener" style="color:#8FDCB0">🔒 Staff Login</a></div></footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const OZ=31.1035; const S={currency:'MYR',unit:'g',mode:'jual',rate:4.7};
+const M=[
+{id:'COPPER',bm:'Kuprum (Copper)',price:9520,base:'t',chg:0.5,vol:.014,sym:'COPPER / LME'},
+{id:'TITA',bm:'Titanium',price:11500,base:'t',chg:0.2,vol:.01,sym:'TITANIUM SPONGE'},
+{id:'LITH',bm:'Litium (LCE)',price:10800,base:'t',chg:-0.6,vol:.03,sym:'LITHIUM CARBONATE'},
+{id:'COLTAN',bm:'Koltan (Coltan)',price:85,base:'kg',chg:0.4,vol:.02,sym:'COLTAN'},
+{id:'TANT',bm:'Tantalum',price:185,base:'kg',chg:0.3,vol:.018,sym:'TANTALUM'},
+{id:'AURUM',bm:'Aurum',price:2675,base:'oz',chg:0.8,vol:.012,sym:'AURUM / LBMA'},
+{id:'SILVER',bm:'Perak (Silver)',price:31.8,base:'oz',chg:1.2,vol:.022,sym:'SILVER / COMEX'},
+{id:'TIN',bm:'Timah (Tin)',price:32200,base:'t',chg:1.8,vol:.02,sym:'TIN / LME'},
+{id:'ALU',bm:'Aluminium',price:2620,base:'t',chg:0.3,vol:.012,sym:'ALUMINIUM / LME'}];
+M.forEach(m=>{m.spark=mk(m.price,m.vol);m.star=['COPPER','TITA','LITH','COLTAN','TANT','AURUM'].includes(m.id)});
+function mk(b,v){let p=b,a=[];for(let i=0;i<24;i++){p*=(1+(Math.random()-.48)*v*2);a.push(p)}a.push(b);return a}
+function fmt(n,d=2){return Number(n).toLocaleString('en-MY',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function gUSD(m){return m.base==='oz'?m.price/OZ:m.base==='kg'?m.price/1000:m.price/1e6}
+function disp(m){let g=gUSD(m);let v=S.unit==='oz'?g*OZ:S.unit==='g'?g:S.unit==='kg'?g*1000:g*1e6;if(S.currency==='MYR')v*=S.rate;return v}
+function cs(){return S.currency==='MYR'?'RM':'$'}
+function render(){const G=document.getElementById('priceGrid');G.innerHTML='';M.forEach(m=>{const p=disp(m);const el=document.createElement('div');el.className='card';
+el.innerHTML=`<div style="display:flex;justify-content:space-between"><div><h3>${m.star?'⭐ ':''}${m.bm}</h3><div class="sym">${m.sym}</div></div><span class="chg ${m.chg>=0?'up':'down'}">${m.chg>=0?'+':''}${fmt(m.chg)}%</span></div><div class="price">${cs()} ${fmt(p)} <small>/ ${S.unit}</small></div><svg class="spark" id="sp-${m.id}" viewBox="0 0 200 42" preserveAspectRatio="none"></svg><div class="meta">USD ${fmt(gUSD(m)*(S.unit==='oz'?OZ:S.unit==='g'?1:S.unit==='kg'?1000:1e6))} • MYR ${fmt(gUSD(m)*S.rate*(S.unit==='oz'?OZ:S.unit==='g'?1:S.unit==='kg'?1000:1e6))} • Manual • LME ref</div>`;
+G.appendChild(el);draw('sp-'+m.id,m.spark,m.chg>=0)});tick()}
+function draw(id,d,up){const s=document.getElementById(id);const mn=Math.min(...d),mx=Math.max(...d),rg=(mx-mn)||1;const pts=d.map((v,i)=>`${(i/(d.length-1)*200).toFixed(1)},${(38-((v-mn)/rg)*32).toFixed(1)}`).join(' ');const col=up?'#34D399':'#F87171';const brand='#2FA968';s.innerHTML=`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2"/><polygon points="0,42 ${pts} 200,42" fill="${col}22"/><polyline points="${pts}" fill="none" stroke="${brand}" stroke-width="0.6" opacity="0.5"/>`}
+function tick(){let h='';M.forEach(m=>{h+=`<span><b>${m.star?'⭐ ':''}${m.bm}:</b> ${cs()}${fmt(disp(m))} <span class="${m.chg>=0?'up':'down'}">${m.chg>=0?'▲':'▼'} ${fmt(m.chg)}%</span></span> &nbsp;•&nbsp;`});document.getElementById('ticker').innerHTML=h+h}
+function sel(){const c1=document.getElementById('chartSelect'),c2=document.getElementById('calcMineral');c1.innerHTML='';c2.innerHTML='';M.forEach(m=>{c1.innerHTML+=`<option value="${m.id}">${m.bm}</option>`;c2.innerHTML+=`<option value="${m.id}">${m.bm}</option>`});c1.onchange=line}
+function hist(m){let a=[],p=m.price*(1-m.vol*8);for(let i=0;i<30;i++){p*=(1+(Math.random()-.42)*m.vol*2);a.push(p)}a[29]=m.price;return a}
+function line(){const cv=document.getElementById('lineChart'),x=cv.getContext('2d');const dk=document.documentElement.getAttribute('data-theme')==='dark';const W=cv.width=cv.clientWidth*2||600,H=560;x.clearRect(0,0,W,H);const m=M.find(v=>v.id===(document.getElementById('chartSelect').value||'COPPER'));const d=hist(m);const mn=Math.min(...d)*.995,mx=Math.max(...d)*1.005;const X=i=>50+i/(d.length-1)*(W-70),Y=v=>H-50-((v-mn)/(mx-mn))*(H-110);x.strokeStyle='rgba(61,186,107,.18)';x.fillStyle=dk?'#B7C9BE':'#9BA9A0';x.font='20px Manrope';for(let g=0;g<5;g++){const v=mn+(mx-mn)*g/4;x.beginPath();x.moveTo(50,Y(v));x.lineTo(W-20,Y(v));x.stroke();x.fillText(fmt(v),4,Y(v)+6)}x.beginPath();d.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));const gr=x.createLinearGradient(0,0,W,0);gr.addColorStop(0,'#7BD89A');gr.addColorStop(1,'#0E7A52');x.strokeStyle=gr;x.lineWidth=5;x.stroke();document.getElementById('lineNote').textContent=`Simulasi trend. Semasa: $${fmt(m.price)} / ${m.base}.`;bar()}
+function bar(){const cv=document.getElementById('barChart'),x=cv.getContext('2d');const dk=document.documentElement.getAttribute('data-theme')==='dark';const W=cv.width=cv.clientWidth*2||600,H=560;x.clearRect(0,0,W,H);const vs=M.map(m=>({m,v:gUSD(m)*S.rate*1000}));const mx=Math.max(...vs.map(o=>o.v));const bw=(W-80)/vs.length;vs.forEach((o,i)=>{const h=(H-140)*(o.v/mx);const px=50+i*bw+8,py=H-60-h;const g=x.createLinearGradient(0,py,0,py+h);g.addColorStop(0,dk?'#4CC38A':'#0E7A52');g.addColorStop(1,dk?'#2FA968':'#0B5C3F');x.fillStyle=g;x.fillRect(px,py,bw-18,h);x.fillStyle=dk?'#B7C9BE':'#0B5C3F';x.font='bold 16px Manrope';x.fillText(o.m.id,px,H-36)})}
+function toG(w,u){return u==='g'?w:u==='kg'?w*1000:u==='oz'?w*OZ:w*1e6}
+function calc(){const m=M.find(x=>x.id===(document.getElementById('calcMineral').value||'COPPER'));const w=parseFloat(document.getElementById('calcWeight').value)||0,u=document.getElementById('calcUnit').value,pr=parseFloat(document.getElementById('calcPrem').value)||0,lg=parseFloat(document.getElementById('calcLog').value)||0,pu=parseFloat(document.getElementById('calcSlider').value)||100;const sg=gUSD(m)*S.rate;document.getElementById('calcSpot').value='RM '+fmt(sg,4)+' /g';document.getElementById('sliderVal').textContent='Ketulenan: '+pu+'%';const g=toG(w,u),gross=g*sg,after=gross*pu/100,adj=after*(1+pr/100),net=S.mode==='jual'?adj-lg:adj+lg;const R=v=>'RM '+fmt(v);document.getElementById('calcResult').innerHTML=`<div><span>Spot semasa</span><span>${R(sg)} /g</span></div><div><span>Berat → gram</span><span>${fmt(g)} g</span></div><div><span>Kasar</span><span>${R(gross)}</span></div><div><span>Tulen ${fmt(pu,1)}%</span><span>${R(after)}</span></div><div><span>Premium ${pr}%</span><span>${R(adj)}</span></div><div><span>Bersih</span><span>${R(net)}</span></div>`;document.getElementById('calcFormula').textContent=`Kasar=berat×RM${fmt(sg,4)}/g. Tulen=kasar×${fmt(pu,1)}%. Laras=tulen×(1+${fmt(pr,2)}%). Harga rujukan, bukan sebutharga FSG.`}
+function refresh(){render();line();calc();document.getElementById('updateInfo').textContent=new Date().toLocaleString('ms-MY')}
+document.querySelectorAll('#curSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#curSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.currency=b.dataset.cur;refresh()});
+document.querySelectorAll('#unitSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#unitSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.unit=b.dataset.unit;refresh()});
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.mode=b.dataset.mode;calc()});
+['calcWeight','calcUnit','calcPrem','calcLog','calcSlider','calcMineral'].forEach(id=>document.getElementById(id).addEventListener('input',calc));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.1});document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+sel();refresh();window.addEventListener('resize',()=>line());document.addEventListener('fsg:themechange',()=>line());
+</script>
+<script src="assets/js/theme.js" defer></script>
+</body>
+</html>
