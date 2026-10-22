@@ -64,6 +64,29 @@ Frontend requirements: React 17+, Tailwind CSS, `@supabase/supabase-js` v2.
 
 ## How to apply (Supabase Dashboard)
 
+### Run the marketplace locally / deploy it
+
+This repository is a complete runnable Vite + React + Tailwind app.
+
+```bash
+npm install
+cp .env.example .env   # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+npm run dev            # http://localhost:5173
+npm run build          # dist/ = marketplace SPA + legacy corporate pages
+```
+
+`npm run build` also copies `legacy/` (the original corporate site:
+`corporate.html`, `minerals.html`, `market-tool.html`, `contact.html`,
+`admin.html` + assets) into `dist/`, so one folder can be deployed
+anywhere. The current production deployment is Cloudflare Pages,
+project **fsg-minerals** (custom domain **fsgminerals.trade**):
+
+```bash
+npx wrangler pages deploy dist --project-name fsg-minerals
+```
+
+### Database migrations
+
 1. **SQL Editor** → paste and run, in order:
    `01_schema_and_storage.sql` → `02_rpc_functions.sql` → `03_rls_and_storage_policies.sql`
    → `04_marketplace_homepage.sql`. All four are idempotent (safe to re-run).
