@@ -4,25 +4,21 @@ import { CHIP_PACKAGES, formatMYR } from '../lib/packages'
 import { useToast } from './Toast'
 
 /**
- * TopUpModal — CHIP Gateway payment packages.
+ * TopUpModal — pakej bayaran CHIP Gateway dalam gaya korporat
+ * putih/hijau (kad putih, butang hijau, aksen emas pada token).
  *
- * Opened automatically when the token balance hits 0 (or a spend is
- * rejected for insufficient balance), and manually by clicking the
- * 🪙 token badge in the header.
+ * Terbuka automatik apabila baki token mencecah 0 (atau belian
+ * ditolak kerana baki tidak mencukupi), dan secara manual melalui
+ * lencana token emas di header.
  *
- * Payment flow:
- *   1. This modal calls the `create-chip-payment` Edge Function with
- *      only a package_id (amounts are decided server-side — the
- *      client cannot tamper with the price).
- *   2. The Edge Function creates the CHIP purchase and returns a
- *      hosted-payment URL; the browser is redirected there.
- *   3. On payment success CHIP calls the `chip-webhook` function,
- *      which credits the tokens via the service_role-only
- *      add_tokens() RPC.
- *
- * Both Edge Functions are included as integration skeletons in
- * supabase/functions/ — deploy them and set the CHIP secrets
- * before going live (see README).
+ * Aliran bayaran:
+ *   1. Modal memanggil Edge Function `create-chip-payment` dengan
+ *      package_id sahaja (amaun diputuskan di pihak server — klien
+ *      tidak boleh ubah harga).
+ *   2. Edge Function cipta pembelian CHIP dan pulangkan URL hosted
+ *      payment; pelayar dialihkan ke sana.
+ *   3. Selepas bayaran berjaya, CHIP panggil `chip-webhook` yang
+ *      mengkreditkan token melalui RPC add_tokens (service_role sahaja).
  */
 export default function TopUpModal({ open, onClose }) {
   const toast = useToast()
@@ -38,13 +34,13 @@ export default function TopUpModal({ open, onClose }) {
       })
       if (error) throw error
       if (!data?.payment_url) {
-        throw new Error('The payment service did not return a payment URL.')
+        throw new Error('Servis pembayaran tidak memulangkan URL pembayaran.')
       }
       window.location.href = data.payment_url
-      // Page navigates to CHIP's hosted checkout — leave `busy` set.
+      // Halaman dialihkan ke checkout CHIP — biarkan `busy` kekal.
     } catch (err) {
       toast.error(
-        'Could not start the CHIP payment. Make sure the create-chip-payment Edge Function is deployed (supabase/functions/).'
+        'Pembayaran CHIP tidak dapat dimulakan. Pastikan Edge Function create-chip-payment telah di-deploy (supabase/functions/).'
       )
       setBusy(null)
     }
@@ -52,77 +48,53 @@ export default function TopUpModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+      className="modal-overlay"
       onClick={() => !busy && onClose()}
       role="dialog"
       aria-modal="true"
-      aria-label="Top-up tokens"
+      aria-label="Top-up token"
     >
-      <div
-        className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Top-Up Tokens</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Payments are processed securely by CHIP Gateway — FPX, cards and
-              e-wallets.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+      <div className="modal wide" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="mclose" onClick={onClose} aria-label="Tutup">
+          ✕
+        </button>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <h2>Top-Up Token</h2>
+        <p className="msub">
+          Pembayaran diproses dengan selamat oleh CHIP Gateway — FPX, kad dan
+          e-dompet.
+        </p>
+
+        <div className="grid3" style={{ marginTop: 20 }}>
           {CHIP_PACKAGES.map((pkg) => (
-            <div
-              key={pkg.id}
-              className={`relative flex flex-col rounded-2xl border p-5 ${
-                pkg.highlight
-                  ? 'border-amber-400 bg-amber-50/60 ring-2 ring-amber-400/30'
-                  : 'border-slate-200 bg-slate-50/60'
-              }`}
-            >
-              {pkg.highlight && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-900">
-                  Best Value
-                </span>
-              )}
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                {pkg.label}
-              </p>
-              <p className="mt-2 text-3xl font-black text-slate-900">
-                {pkg.tokens}
-                <span className="ml-1 text-sm font-semibold text-slate-500">tokens</span>
-              </p>
-              <p className="mt-1 text-sm font-bold text-slate-900">{formatMYR(pkg.amount)}</p>
-              <p className="mt-0.5 text-xs text-slate-500">
+            <div className={`card pkg${pkg.highlight ? ' hot' : ''}`} key={pkg.id}>
+              {pkg.highlight && <span className="hot-pill">Nilai Terbaik</span>}
+              <div className="plabel">{pkg.label}</div>
+              <div className="pnum">
+                🪙 {pkg.tokens} <span>token</span>
+              </div>
+              <div className="pprice">{formatMYR(pkg.amount)}</div>
+              <div className="pper">
                 {(pkg.amount / pkg.tokens).toFixed(2)} MYR / token
-              </p>
-              <p className="mt-2 flex-1 text-xs font-medium text-slate-400">{pkg.note}</p>
+              </div>
+              <div className="pnote">{pkg.note}</div>
               <button
                 type="button"
+                className="btn primary"
+                style={{ marginTop: 14 }}
                 onClick={() => handlePay(pkg)}
                 disabled={busy !== null}
-                className="mt-4 rounded-lg bg-slate-900 py-2 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {busy === pkg.id ? 'Redirecting…' : `Pay ${formatMYR(pkg.amount)} via CHIP`}
+                {busy === pkg.id ? 'Mengalihkan…' : `Bayar ${formatMYR(pkg.amount)} via CHIP`}
               </button>
             </div>
           ))}
         </div>
 
-        <p className="mt-5 text-center text-xs text-slate-400">
-          Tokens are credited automatically once CHIP confirms the payment. Ran
-          out because a lead was inaccurate? Report it — approved reports refund
-          your token.
+        <p className="mnote">
+          Token dikreditkan secara automatik selepas CHIP mengesahkan pembayaran.
+          Token habis kerana lead tidak tepat? Laporkan — laporan yang diluluskan
+          mendapat bayaran balik token.
         </p>
       </div>
     </div>

@@ -4,19 +4,21 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 
 /**
- * DirectoryTeaser — "Latest Buyers & Sellers" on the homepage.
+ * DirectoryTeaser — "Latest Buyers & Sellers" sebagai KAD PUTIH
+ * dengan sempadan hijau korporat (gaya laman asal).
  *
- * Public fields shown: Commodity, Volume, Location, Incoterms, Updated.
- * Sensitive fields (company name, phone) are masked — and not just
- * cosmetically: get_public_listings returns '••••••••' from the
- * DATABASE for locked leads, so a tampered client cannot reveal the
- * real values. The strings below are just the visual style.
+ * Medan awam: Komoditi, Volum, Lokasi, Incoterms, Dikemas Kini.
+ * Nama syarikat & telefon disaring — dan bukan sekadar kosmetik:
+ * get_public_listings memulangkan '••••••••' dari DATABASE untuk
+ * lead yang belum dibuka kunci, jadi klien yang diubah pun tidak
+ * dapat nilai sebenar.
  *
- * Row actions:
- *  - Guest      -> opens the Sign-Up modal (onRequireAuth)
- *  - Logged in  -> unlock_lead RPC (1 token). When the balance
- *                  reaches 0 (or a spend is rejected), the CHIP
- *                  top-up modal opens automatically (onTopUp).
+ * Butang setiap kad "Buka Maklumat (1 Token)" (butang hijau utama):
+ *  - Tetamu     -> modal daftar (tiada panggilan RPC langsung)
+ *  - Log masuk  -> RPC unlock_lead (1 token) -> toast
+ *                  "1 Token Deducted. Lead Unlocked."
+ *  - Baki 0     -> toast "Insufficient Token Balance. Please Top-Up."
+ *                  + modal top-up CHIP terbuka automatik
  */
 const MASKED_COMPANY = '████████ Co. Ltd'
 const MASKED_PHONE = '+██ ████ ████'
@@ -33,39 +35,27 @@ function fmtDate(iso) {
 function SideTag({ side }) {
   const buy = side === 'buy'
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
-        buy ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
-      }`}
-    >
+    <span className={buy ? 'sidebadge buy' : 'sidebadge sell'}>
       {buy ? 'Buyer' : 'Seller'}
     </span>
   )
 }
 
-function UnlockButton({ lead, busy, onClick }) {
+function UnlockAction({ lead, busy, onClick }) {
   if (lead.flagged) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-        Reported — paused
-      </span>
-    )
+    return <span className="paused">Dilapor — dijeda</span>
   }
   if (lead.has_unlocked_contact) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-        ✓ Unlocked
-      </span>
-    )
+    return <span className="unlocked-pill">✓ Unlocked</span>
   }
   return (
     <button
       type="button"
+      className="btn primary small"
       onClick={() => onClick(lead)}
       disabled={busy === lead.id}
-      className="whitespace-nowrap rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
     >
-      {busy === lead.id ? 'Unlocking…' : 'Unlock Contact Details (1 Token)'}
+      {busy === lead.id ? 'Membuka…' : 'Buka Maklumat (1 Token)'}
     </button>
   )
 }
@@ -84,9 +74,8 @@ export default function DirectoryTeaser({ onRequireAuth, onTopUp }) {
       p_offset: 0,
     })
     if (rpcError) {
-      // Database layer not activated yet (migrations pending) → show a
-      // friendly "coming soon" state instead of a raw error. Once the
-      // SQL migrations run, listings appear here with no redeploy.
+      // Lapisan database belum diaktifkan (migrasi belum dijalankan)
+      // -> papar keadaan "akan datang" yang kemas, bukan ralat.
       const notReady = /PGRST202|Could not find|get_public_listings|schema cache|does not exist|Tediously/i.test(
         rpcError.message || ''
       )
@@ -107,11 +96,10 @@ export default function DirectoryTeaser({ onRequireAuth, onTopUp }) {
     load()
   }, [load])
 
-  /* ---------- Tier-1 unlock, bound to the unlock_lead RPC ---------- */
+  /* ---------- Tier-1 unlock, terikat kepada RPC unlock_lead ---------- */
   async function handleUnlock(lead) {
     if (!user) {
-      // Guests must register first — no data leaves the DB for them.
-      onRequireAuth()
+      onRequireAuth() // tetamu mesti daftar dahulu
       return
     }
     setBusy(lead.id)
@@ -122,22 +110,22 @@ export default function DirectoryTeaser({ onRequireAuth, onTopUp }) {
       if (rpcError) throw rpcError
 
       if (data.status === 'unlocked') {
-        // Required toast message:
+        // Mesej toast yang diwajibkan:
         toast.success('1 Token Deducted. Lead Unlocked.')
       } else {
-        // already_unlocked / own_listing — no charge.
-        toast.info('Lead details available.')
+        // already_unlocked / own_listing — tiada caj.
+        toast.info('Butiran lead tersedia.')
       }
 
       await refreshBalance()
       await load()
 
-      // Balance hit 0 -> proactively offer the CHIP top-up.
+      // Baki mencecah 0 -> tawarkan top-up CHIP secara proaktif.
       if (typeof data.token_balance === 'number' && data.token_balance <= 0) {
         onTopUp()
       }
     } catch (err) {
-      // Required toast message (via rpcErrorMessage):
+      // Mesej toast yang diwajibkan (via rpcErrorMessage):
       toast.error(rpcErrorMessage(err))
       if (String(err?.message || '').includes('INSUFFICIENT_TOKEN_BALANCE')) {
         onTopUp()
@@ -147,212 +135,99 @@ export default function DirectoryTeaser({ onRequireAuth, onTopUp }) {
     }
   }
 
-  return (
-    <section id="marketplace" className="bg-slate-50 py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-              Latest Buyers &amp; Sellers
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Live directory of verified mineral supply and demand. Company
-              names and contacts stay masked until unlocked.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={load}
-            className="self-start rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 sm:self-auto"
-          >
-            Refresh
-          </button>
+  function renderCard(lead) {
+    const unlocked = !!lead.has_unlocked_contact
+    const location =
+      [lead.region, lead.country].filter(Boolean).join(', ') || '—'
+
+    return (
+      <article className="leadcard" key={lead.id}>
+        <div className="lc-top">
+          <SideTag side={lead.side} />
+          {lead.verified && !lead.flagged && (
+            <span className="vcheck">✓ Disahkan</span>
+          )}
         </div>
 
-        {loading && (
-          <div className="space-y-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-200/70" />
-            ))}
+        <h3 className={`lc-co${unlocked ? '' : ' masked'}`}>
+          {unlocked ? lead.company_name || '—' : MASKED_COMPANY}
+        </h3>
+        <div className={`lc-phone${unlocked ? '' : ' masked'}`}>
+          {unlocked ? lead.phone || '—' : MASKED_PHONE}
+        </div>
+
+        <div className="lc-meta">
+          <div>
+            <span className="k">Komoditi</span>
+            <span className="v">{lead.mineral_type || '—'}</span>
           </div>
-        )}
-
-        {error && (
-          <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>
-        )}
-
-        {!loading && !error && leads.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center">
-            <p className="font-semibold text-slate-700">Direktori lead akan muncul di sini</p>
-            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-              Listing pembeli &amp; penjual baharu sedang disediakan. Daftar percuma
-              sekarang — anda akan menerima 10 token untuk membuka kunci kontak
-              pertama anda.
-            </p>
-            <button
-              type="button"
-              onClick={onRequireAuth}
-              className="mt-5 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700"
-            >
-              Register Free &amp; Get 10 Tokens
-            </button>
+          <div>
+            <span className="k">Volum</span>
+            <span className="v">{lead.quantity_available || '—'}</span>
           </div>
-        )}
+          <div>
+            <span className="k">Lokasi</span>
+            <span className="v">{location}</span>
+          </div>
+          <div>
+            <span className="k">Incoterms</span>
+            <span className="v">{lead.incoterms || '—'}</span>
+          </div>
+        </div>
 
-        {!loading && !error && leads.length > 0 && (
-          <>
-            {/* ---- Desktop: directory table ---- */}
-            <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-              <div className="overflow-x-auto">
-                <table className="min-w-[980px] w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                      <th className="px-4 py-3 font-semibold">Company</th>
-                      <th className="px-4 py-3 font-semibold">Contact</th>
-                      <th className="px-4 py-3 font-semibold">Commodity</th>
-                      <th className="px-4 py-3 font-semibold">Volume</th>
-                      <th className="px-4 py-3 font-semibold">Location</th>
-                      <th className="px-4 py-3 font-semibold">Incoterms</th>
-                      <th className="px-4 py-3 font-semibold">Updated</th>
-                      <th className="px-4 py-3 text-right font-semibold">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {leads.map((lead) => {
-                      const unlocked = !!lead.has_unlocked_contact
-                      return (
-                        <tr key={lead.id} className="transition hover:bg-slate-50/70">
-                          <td className="px-4 py-3.5">
-                            <div className="flex items-center gap-2">
-                              <SideTag side={lead.side} />
-                              {lead.verified && !lead.flagged && (
-                                <span className="text-[11px] font-semibold text-emerald-600">
-                                  ✓ Verified
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              className={`mt-1 font-semibold ${
-                                unlocked ? 'text-slate-900' : 'tracking-wide text-slate-400'
-                              }`}
-                            >
-                              {unlocked ? lead.company_name || '—' : MASKED_COMPANY}
-                            </div>
-                          </td>
-                          <td
-                            className={`px-4 py-3.5 font-medium ${
-                              unlocked ? 'text-slate-900' : 'tracking-wide text-slate-400'
-                            }`}
-                          >
-                            {unlocked ? lead.phone || '—' : MASKED_PHONE}
-                          </td>
-                          <td className="px-4 py-3.5 font-medium text-slate-800">
-                            {lead.mineral_type || '—'}
-                          </td>
-                          <td className="px-4 py-3.5 text-slate-600">
-                            {lead.quantity_available || '—'}
-                          </td>
-                          <td className="px-4 py-3.5 text-slate-600">
-                            {[lead.region, lead.country].filter(Boolean).join(', ') || '—'}
-                          </td>
-                          <td className="px-4 py-3.5 text-slate-600">
-                            {lead.incoterms || '—'}
-                          </td>
-                          <td className="px-4 py-3.5 text-slate-500">
-                            {fmtDate(lead.updated_at)}
-                          </td>
-                          <td className="px-4 py-3.5 text-right">
-                            <UnlockButton lead={lead} busy={busy} onClick={handleUnlock} />
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        <div className="lc-date">Dikemas kini: {fmtDate(lead.updated_at)}</div>
 
-            {/* ---- Mobile / tablet: directory cards ---- */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:hidden">
-              {leads.map((lead) => {
-                const unlocked = !!lead.has_unlocked_contact
-                return (
-                  <div
-                    key={lead.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <SideTag side={lead.side} />
-                      {lead.verified && !lead.flagged && (
-                        <span className="text-[11px] font-semibold text-emerald-600">
-                          ✓ Verified
-                        </span>
-                      )}
-                    </div>
-                    <p
-                      className={`mt-2 text-base font-bold ${
-                        unlocked ? 'text-slate-900' : 'tracking-wide text-slate-400'
-                      }`}
-                    >
-                      {unlocked ? lead.company_name || '—' : MASKED_COMPANY}
-                    </p>
-                    <p
-                      className={`text-sm font-medium ${
-                        unlocked ? 'text-slate-700' : 'tracking-wide text-slate-400'
-                      }`}
-                    >
-                      {unlocked ? lead.phone || '—' : MASKED_PHONE}
-                    </p>
-                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                      <div>
-                        <dt className="text-slate-400">Commodity</dt>
-                        <dd className="font-semibold text-slate-800">
-                          {lead.mineral_type || '—'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-400">Volume</dt>
-                        <dd className="font-semibold text-slate-800">
-                          {lead.quantity_available || '—'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-400">Location</dt>
-                        <dd className="font-semibold text-slate-800">
-                          {[lead.region, lead.country].filter(Boolean).join(', ') || '—'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-400">Incoterms</dt>
-                        <dd className="font-semibold text-slate-800">
-                          {lead.incoterms || '—'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-400">Updated</dt>
-                        <dd className="font-semibold text-slate-800">
-                          {fmtDate(lead.updated_at)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <div className="mt-4">
-                      <div className="[&>button]:w-full">
-                        <UnlockButton lead={lead} busy={busy} onClick={handleUnlock} />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+        <div className="lc-action">
+          <UnlockAction lead={lead} busy={busy} onClick={handleUnlock} />
+        </div>
+      </article>
+    )
+  }
 
-            <p className="mt-5 text-center text-xs text-slate-400">
-              Contact details are masked at the database layer and revealed only
-              after unlocking with a token. Inaccurate leads can be reported for a
-              token refund.
-            </p>
-          </>
-        )}
-      </div>
+  return (
+    <section id="marketplace" className="dir-section">
+      <h2 className="sec-title">Latest Buyers &amp; Sellers</h2>
+      <p className="sec-sub">
+        Direktori langsung bekalan &amp; permintaan mineral disahkan. Nama syarikat
+        dan butiran kontak kekal disaring di lapisan database sehingga dibuka
+        dengan 1 token.
+      </p>
+
+      {loading && (
+        <div className="leadstate">Memuatkan direktori lead…</div>
+      )}
+
+      {error && (
+        <div className="card" style={{ borderColor: '#F3C6C6' }}>
+          <p style={{ color: '#8C2F2F', fontWeight: 700 }}>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && leads.length === 0 && (
+        <div className="dirwrap empty-dir">
+          <div className="eb">Direktori lead akan muncul di sini</div>
+          <p>
+            Listing pembeli &amp; penjual baharu sedang disediakan. Daftar percuma
+            sekarang — anda akan menerima 10 token untuk membuka kunci kontak
+            pertama anda.
+          </p>
+          <button type="button" className="btn primary" onClick={onRequireAuth}>
+            Register Free &amp; Get 10 Tokens
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && leads.length > 0 && (
+        <>
+          <div className="leadgrid">{leads.map(renderCard)}</div>
+
+          <p style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 14 }}>
+            Butiran kontak disaring di lapisan database dan hanya terbuka selepas
+            tukar 1 token. Lead tidak tepat boleh dilapor untuk bayaran balik
+            token.
+          </p>
+        </>
+      )}
     </section>
   )
 }

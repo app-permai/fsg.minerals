@@ -3,64 +3,54 @@ import Header from '../components/Header'
 import Hero from '../components/Hero'
 import DirectoryTeaser from '../components/DirectoryTeaser'
 import HowItWorks from '../components/HowItWorks'
+import MineralsGrid from '../components/MineralsGrid'
 import Footer from '../components/Footer'
 import SignUpModal from '../components/SignUpModal'
 import TopUpModal from '../components/TopUpModal'
-import { useAuth } from '../context/AuthContext'
-import { useToast } from '../components/Toast'
 
 /**
- * RFQ band — target of the "Submit RFQ" nav link.
- * Guests are routed to registration; the full RFQ module can be
- * mounted here later without changing the navigation.
+ * Home — laman utama marketplace B2B dalam reka bentuk korporat
+ * hijau/putih ASAL (Playfair Display + Manrope, hijau #0E7A52).
+ *
+ * Susun atur:
+ *  Header          header asal + ticker + Log In / Register + lencana token
+ *  Hero            hero asal + panel Terminal Status + 4 kad metrik + CTA token
+ *  DirectoryTeaser direktori lead disaring (RPC unlock_lead)
+ *  HowItWorks      4 langkah token
+ *  MineralsGrid    grid "Mineral Fokus FSG" asal
+ *  CaraBerurusan   3 kad asal (Enquiry / Assay / Sebutharga)
+ *  Footer          footer asal
  */
-function RfqBanner({ onRegister }) {
-  const { user } = useAuth()
-  const toast = useToast()
-
-  function handleClick() {
-    if (!user) {
-      onRegister()
-    } else {
-      toast.info('RFQ submission is coming soon. Contact our trading desk meanwhile — we will source verified suppliers for you.')
-    }
-  }
-
+function CaraBerurusan() {
   return (
-    <section id="rfq" className="bg-slate-900">
-      <div className="mx-auto flex max-w-7xl flex-col items-start gap-5 px-4 py-12 sm:flex-row sm:items-center sm:justify-between sm:py-14">
-        <div>
-          <h2 className="text-xl font-bold text-white sm:text-2xl">
-            Can&apos;t find the mineral you need?
-          </h2>
-          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-300">
-            Submit an RFQ — tell us the commodity, volume, specification and
-            destination, and our team sources verified direct mine owners for
-            you.
+    <section>
+      <h2 className="sec-title">Cara Berurusan</h2>
+      <p className="sec-sub">Telus dan berdokumen untuk penjual dan pembeli.</p>
+      <div className="grid3">
+        <div className="card">
+          <h3>1. Enquiry</h3>
+          <p>
+            Hantar berat, gred/assay, lokasi, foto dan Incoterms ke{' '}
+            <a href="mailto:info@fsgminerals.trade">info@fsgminerals.trade</a>.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleClick}
-          className="shrink-0 rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold text-slate-900 transition hover:bg-amber-300"
-        >
-          Submit RFQ
-        </button>
+        <div className="card">
+          <h3>2. Assay &amp; Sahkan</h3>
+          <p>
+            Minta assay XRF, sahkan spesifikasi, kuantiti dan jadual penghantaran.
+          </p>
+        </div>
+        <div className="card">
+          <h3>3. Sebutharga Rasmi</h3>
+          <p>
+            Terima sebutharga rasmi FSG dengan syarat CIF/FOB dan pembayaran.
+          </p>
+        </div>
       </div>
     </section>
   )
 }
 
-/**
- * Home — the B2B marketplace homepage.
- *
- *  Header          auth + token badge + Marketplace / Submit RFQ links
- *  Hero            new marketplace tagline + "Register Free & Get 10 Tokens"
- *  DirectoryTeaser masked "Latest Buyers & Sellers" (unlock_lead RPC)
- *  HowItWorks      4-step token process
- *  RfqBanner       RFQ band (nav target)
- *  Footer
- */
 export default function Home() {
   const [signUp, setSignUp] = useState({ open: false, mode: 'register' })
   const [topUp, setTopUp] = useState(false)
@@ -70,16 +60,17 @@ export default function Home() {
 
   return (
     <>
-      <Header onLogin={openLogin} onRegister={openRegister} onTopUp={() => setTopUp(true)} />
-      <main>
+      <Header onLogin={openLogin} onTopUp={() => setTopUp(true)} />
+      <div className="container">
         <Hero onRegister={openRegister} />
         <DirectoryTeaser onRequireAuth={openRegister} onTopUp={() => setTopUp(true)} />
         <HowItWorks onRegister={openRegister} onTopUp={() => setTopUp(true)} />
-        <RfqBanner onRegister={openRegister} />
-      </main>
+        <MineralsGrid />
+        <CaraBerurusan />
+      </div>
       <Footer />
 
-      {/* ---- Global modals ---- */}
+      {/* ---- Modal global (gaya korporat hijau) ---- */}
       <SignUpModal
         open={signUp.open}
         mode={signUp.mode}

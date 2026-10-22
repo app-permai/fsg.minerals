@@ -1,0 +1,253 @@
+/* ============================================================
+   FSG Minerals — corporate green/white theme
+   Diambil TERUS dari laman korporat asal (assets/css/style.css)
+   supaya reka bentuk 100% sama: hijau #0E7A52, putih, krim,
+   tajuk serif Playfair Display, badan Manrope.
+   Tambahan marketplace (token badge emas, jadual direktori,
+   modal, toast) mengikut token reka bentuk yang sama.
+   Tiada dark mode.
+   ============================================================ */
+
+:root{
+  --bg:#FFFFFF; --bg2:#F3F7F4; --card:#FFFFFF;
+  --brand:#0E7A52; --brand-deep:#0B2E21; --brand2:#2FA968;
+  --ink:#1B2420; --muted:#5D7067; --line:#DCE7E0;
+  --gold-bg:#FBF3DC; --gold-line:#E5CE8C; --gold-ink:#8A6B14;
+  --shadow:0 16px 40px rgba(20,40,30,.08); --r:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+h1,h2,h3{font-family:"Playfair Display",Georgia,serif;letter-spacing:-.02em;line-height:1.2;margin:0}
+.container{max-width:1180px;margin:0 auto;padding:0 20px}
+a{color:var(--brand)}
+section{padding:26px 0}
+
+/* ---------- Header + ticker (asal) ---------- */
+header.site{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;flex-wrap:wrap}
+.brandbox{display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit}
+.brand-logo{width:56px;height:56px;object-fit:cover;border-radius:14px;display:block;border:1px solid var(--line)}
+.company-name{font-size:.95rem;font-weight:800;color:#1a202c;letter-spacing:.4px;text-transform:uppercase;line-height:1.2}
+.reg-number{font-size:.8rem;color:#4a5568;font-weight:600;margin:2px 0 4px}
+.tagline{display:inline-block;font-size:.68rem;font-weight:700;color:#1e5631;background:#f0fdf4;padding:3px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;border:1px solid #dcfce7}
+.menu{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.menu a,.menu button{
+  text-decoration:none;color:var(--ink);font-weight:700;font-size:13px;padding:10px 14px;border-radius:10px;
+  border:1px solid transparent;background:transparent;font-family:inherit;cursor:pointer
+}
+.menu a.active,.menu a:hover,.menu button:hover{border-color:var(--line);background:var(--bg2);color:var(--brand)}
+.menu .authbtn{border-color:var(--line);background:#fff;color:var(--brand)}
+.menu .theme-toggle{background:#fff;border-color:var(--line);color:var(--ink)}
+.ticker{background:linear-gradient(90deg,#0B2E21,#0E7A52);color:#E9F5EE;overflow:hidden;white-space:nowrap;border-top:1px solid #0B5C3F;border-bottom:1px solid #0B5C3F}
+
+/* ---------- Toggle Cerah/Gelap (asal, lalai cerah) ---------- */
+.theme-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:38px;padding:9px 12px;border-radius:10px;
+  border:1px solid var(--line);background:#fff;color:var(--ink);
+  font:inherit;font-family:inherit;font-size:13px;font-weight:700;line-height:1;cursor:pointer;
+  transition:transform .2s,border-color .2s,color .2s,background-color .2s,box-shadow .2s;
+}
+.theme-toggle:hover{border-color:var(--brand);color:var(--brand);box-shadow:0 8px 20px rgba(14,122,82,.12)}
+.theme-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.theme-toggle svg{width:16px;height:16px;flex:none}
+.theme-toggle .i-sun{display:none}
+html[data-theme="dark"] .theme-toggle .i-moon{display:none}
+html[data-theme="dark"] .theme-toggle .i-sun{display:block}
+.theme-toggle .tt-light{display:none}
+html[data-theme="dark"] .theme-toggle .tt-dark{display:none}
+html[data-theme="dark"] .theme-toggle .tt-light{display:inline}
+.ticker span{display:inline-block;padding:9px 0;animation:sc 40s linear infinite;font-size:13px;font-weight:600}
+@keyframes sc{to{transform:translateX(-50%)}}
+
+/* ---------- Butang (asal) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:11px 18px;border-radius:12px;font-weight:800;font-size:13px;border:1px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;cursor:pointer;transition:.2s;font-family:inherit}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn.primary{background:linear-gradient(135deg,#0E7A52,#0B5C3F);color:#fff;border:none}
+.btn.small{min-height:36px;padding:8px 14px;font-size:12.5px;border-radius:10px}
+
+/* ---------- Lencana token emas ---------- */
+.tokbadge{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:8px 15px;border-radius:999px;background:var(--gold-bg);border:1px solid var(--gold-line);color:var(--gold-ink);font-weight:800;font-size:12.5px;cursor:pointer;transition:.2s;font-family:inherit}
+.tokbadge:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(138,107,20,.14)}
+
+/* ---------- Hero + panel + stats (asal) ---------- */
+.hero{padding:56px 0 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:26px;align-items:center}
+@media(max-width:900px){.hero{grid-template-columns:1fr}}
+.kicker{font-size:11px;letter-spacing:.26em;font-weight:800;color:var(--brand)}
+.hero h1{font-size:clamp(32px,5vw,54px);margin:10px 0}
+.hero h1 em{font-style:normal;color:var(--brand)}
+.lead{color:var(--muted);font-size:15px;max-width:620px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;min-width:135px;box-shadow:var(--shadow)}
+.stat strong{font-family:"Playfair Display";font-size:20px}
+.stat span{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.06em}
+.panel{background:linear-gradient(135deg,#0B2E21,#0E7A52);color:#fff;border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.panel h3{font-size:22px;margin-bottom:6px}
+.panel p{font-size:13px;color:#C9D6CF;margin:0 0 12px}
+
+/* ---------- Kad & grid (asal) ---------- */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.grid3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--brand),transparent)}
+.card h3{font-size:17px}
+.card .sym{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--brand)}
+.card p{font-size:13px;color:var(--muted)}
+.sec-title{font-size:28px;margin-bottom:6px}
+.sec-sub{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:760px}
+.badge{display:inline-block;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(14,122,82,.08);color:var(--brand)}
+
+/* ---------- Direktori lead: kad putih, sempadan hijau ---------- */
+.dir-section{
+  background:linear-gradient(180deg,#FCFBF6 0%,#F4F8F5 100%);
+  border:1px solid var(--line);border-radius:24px;
+  padding:26px;margin-top:8px;
+}
+@media(max-width:600px){.dir-section{padding:18px;border-radius:18px}}
+.leadgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:980px){.leadgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.leadgrid{grid-template-columns:1fr}}
+.leadcard{
+  background:#fff;border:1.5px solid rgba(14,122,82,.30);border-radius:16px;
+  padding:20px;box-shadow:0 10px 26px rgba(20,40,30,.06);
+  display:flex;flex-direction:column;gap:9px;transition:transform .2s,border-color .2s,box-shadow .2s;
+}
+.leadcard:hover{border-color:var(--brand);box-shadow:0 16px 34px rgba(14,122,82,.13);transform:translateY(-2px)}
+.leadcard .lc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.leadcard .lc-co{font-family:"Playfair Display",Georgia,serif;font-size:18px;line-height:1.3;color:var(--ink);margin:1px 0 0}
+.leadcard .lc-phone{font-size:12.5px;color:var(--muted)}
+.leadcard .lc-meta{
+  display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;
+  padding:12px 0;margin-top:2px;
+  border-top:1px solid rgba(14,122,82,.16);border-bottom:1px solid rgba(14,122,82,.16);
+}
+.leadcard .lc-meta .k{display:block;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.leadcard .lc-meta .v{display:block;font-size:13px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.leadcard .lc-date{font-size:11px;color:var(--muted)}
+.leadcard .lc-action{margin-top:auto;padding-top:4px}
+.leadcard .lc-action .btn{width:100%}
+.leadstate{background:#fff;border:1.5px solid rgba(14,122,82,.22);border-radius:16px;padding:26px;text-align:center;color:var(--muted)}
+.dirwrap{overflow:hidden;border:1px solid rgba(14,122,82,.28);border-radius:var(--r);background:#fff;box-shadow:var(--shadow)}
+.masked{color:#A9B8B0;letter-spacing:.08em}
+.revealed{font-weight:800;color:var(--ink)}
+.sidebadge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.sidebadge.sell{background:rgba(14,122,82,.1);color:var(--brand);border:1px solid rgba(14,122,82,.22)}
+.sidebadge.buy{background:rgba(31,109,163,.1);color:#1F6DA3;border:1px solid rgba(31,109,163,.25)}
+.vcheck{color:var(--brand);font-weight:800;font-size:11.5px}
+.paused{display:inline-block;font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:999px;background:#FFF7E6;color:#92600A;border:1px solid #F2DFAE}
+.unlocked-pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:999px;background:rgba(14,122,82,.1);color:var(--brand);border:1px solid rgba(14,122,82,.22)}
+
+/* ---------- Langkah token ---------- */
+.stepnum{font-family:"Playfair Display";font-size:30px;color:var(--brand);line-height:1}
+.stepcard{display:flex;flex-direction:column;gap:8px;padding:20px}
+.stepcard h3{font-size:16.5px}
+.stepcard p{font-size:13px;color:var(--muted);flex:1;margin:0}
+.stepcard .lnk{align-self:flex-start;background:none;border:none;padding:0;color:var(--brand);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- Modal (gaya korporat putih/hijau) ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,46,33,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal{background:#fff;border-radius:20px;max-width:520px;width:100%;padding:26px;box-shadow:var(--shadow);max-height:92vh;overflow:auto;position:relative}
+.modal.wide{max-width:780px}
+.modal h2{font-size:22px}
+.modal .msub{color:var(--muted);font-size:13.5px;margin:6px 0 0}
+.mclose{position:absolute;top:14px;right:14px;border:1px solid var(--line);background:#fff;color:var(--muted);width:34px;height:34px;border-radius:10px;font-size:15px;cursor:pointer;font-family:inherit}
+.mclose:hover{color:var(--brand);border-color:var(--brand)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg2);border-radius:12px;padding:4px;gap:4px;margin:18px 0 4px}
+.tabs button{border:none;background:transparent;padding:9px;border-radius:9px;font-weight:800;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit}
+.tabs button.on{background:#fff;color:var(--brand);box-shadow:0 2px 8px rgba(20,40,30,.08)}
+label{font-size:12px;font-weight:800;display:block;margin:10px 0 5px}
+input,select,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+input:focus,textarea:focus{outline:2px solid rgba(14,122,82,.25);border-color:var(--brand)}
+.merr{background:#FDF2F2;border:1px solid #F3C6C6;color:#8C2F2F;font-size:13px;font-weight:600;border-radius:10px;padding:10px 12px;margin-top:12px}
+.mnote{font-size:11.5px;color:var(--muted);text-align:center;margin:14px 0 0}
+
+/* ---------- Pakej top-up CHIP ---------- */
+.pkg{display:flex;flex-direction:column;padding:20px}
+.pkg .plabel{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.pkg .pnum{font-family:"Playfair Display";font-size:34px;margin-top:6px;line-height:1.1}
+.pkg .pnum span{font-size:14px;font-family:Manrope;font-weight:800;color:var(--muted)}
+.pkg .pprice{font-weight:800;font-size:15px;margin-top:2px}
+.pkg .pper{font-size:12px;color:var(--muted)}
+.pkg .pnote{font-size:12px;color:var(--muted);flex:1;margin-top:6px}
+.pkg.hot{border-color:#D9C067;background:#FDFBF2}
+.pkg .hot-pill{position:absolute;top:10px;right:10px;background:var(--gold-bg);border:1px solid var(--gold-line);color:var(--gold-ink);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:999px}
+
+/* ---------- Toast ---------- */
+.toast-stack{position:fixed;bottom:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:380px}
+.toast-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-radius:14px;padding:12px 14px;font-size:13.5px;font-weight:700;box-shadow:var(--shadow);pointer-events:auto}
+.toast-success{background:#F0F9F3;border:1px solid #BFE3CF;color:#0B5C3F}
+.toast-error{background:#FDF2F2;border:1px solid #F3C6C6;color:#8C2F2F}
+.toast-info{background:#F4F8F5;border:1px solid #CFE0D6;color:#33544A}
+.toast-x{background:none;border:none;color:inherit;opacity:.55;font-size:13px;cursor:pointer;padding:0 2px;font-family:inherit}
+.toast-x:hover{opacity:1}
+
+/* ---------- Footer (asal) ---------- */
+footer{background:#0B2E21;color:#C9D6CF;font-size:12px;margin-top:30px;padding:26px 0 40px}
+footer a{color:#8FDCB0}
+
+/* ---------- Status kosong direktori ---------- */
+.empty-dir{text-align:center;padding:44px 20px}
+.empty-dir .eb{font-family:"Playfair Display";font-size:20px;color:var(--ink)}
+.empty-dir p{color:var(--muted);font-size:13.5px;max-width:460px;margin:8px auto 0}
+.empty-dir .btn{margin-top:18px}
+
+/* ---------- Responsif butang/toggle ---------- */
+@media(max-width:560px){
+  .theme-toggle .tt-label{display:none}
+  .theme-toggle{min-width:40px;padding:9px 10px}
+}
+
+/* ============================================================
+   Mod GELAP (pilihan pengguna melalui toggle header).
+   LALAI KEKAL CERAH — putih/emerald korporat.
+   Palet hijau hutan #0A1410, bukan biru navy gaya SaaS.
+   ============================================================ */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0A1410; --bg2:#101E18; --card:#111E18;
+  --brand:#4CC38A; --brand-deep:#0F3B2A; --brand2:#6FDCA1;
+  --ink:#E7F0EA; --muted:#9BB2A6; --line:#24382E;
+  --gold-bg:#2A2415; --gold-line:#6B5A24; --gold-ink:#F2D98B;
+  --shadow:0 16px 40px rgba(0,0,0,.45);
+}
+html[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+html[data-theme="dark"] header.site{background:rgba(10,20,16,.92);border-bottom-color:var(--line)}
+html[data-theme="dark"] .company-name,
+html[data-theme="dark"] .brandname{color:#EAF3EE}
+html[data-theme="dark"] .reg-number{color:#9BB2A6}
+html[data-theme="dark"] .tagline{color:#9FE7BE;background:rgba(47,169,104,.14);border-color:rgba(47,169,104,.32)}
+html[data-theme="dark"] .theme-toggle{background:#13241D;border-color:#2A4034;color:#E7F0EA}
+html[data-theme="dark"] .theme-toggle:hover{border-color:var(--brand);color:var(--brand)}
+html[data-theme="dark"] .menu .authbtn{background:var(--card);border-color:var(--line);color:var(--brand)}
+html[data-theme="dark"] .btn{background:var(--card);color:var(--ink);border-color:var(--line)}
+html[data-theme="dark"] .btn.primary{background:linear-gradient(135deg,#0F8B5C,#0B5C3F);color:#fff;border:none}
+html[data-theme="dark"] .stat{background:var(--card);border-color:var(--line)}
+html[data-theme="dark"] .stat strong{color:#EAF3EE}
+html[data-theme="dark"] .card{background:var(--card);border-color:var(--line)}
+html[data-theme="dark"] .card h3{color:#EAF3EE}
+html[data-theme="dark"] .dir-section{background:linear-gradient(180deg,#0E1A15,#0B1511);border-color:var(--line)}
+html[data-theme="dark"] .leadcard{background:var(--card);border-color:rgba(76,195,138,.34);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+html[data-theme="dark"] .leadcard:hover{border-color:var(--brand);box-shadow:0 16px 34px rgba(0,0,0,.5)}
+html[data-theme="dark"] .leadcard .lc-co{color:#EAF3EE}
+html[data-theme="dark"] .leadcard .lc-meta{border-top-color:rgba(76,195,138,.20);border-bottom-color:rgba(76,195,138,.20)}
+html[data-theme="dark"] .leadcard .lc-meta .v{color:#EAF3EE}
+html[data-theme="dark"] .leadstate,
+html[data-theme="dark"] .dirwrap{background:var(--card);border-color:rgba(76,195,138,.28)}
+html[data-theme="dark"] .masked{color:#7E958A}
+html[data-theme="dark"] .revealed{color:#EAF3EE}
+html[data-theme="dark"] .modal{background:#111E18;border:1px solid var(--line)}
+html[data-theme="dark"] .mclose{background:#0F1B16;border-color:var(--line);color:var(--muted)}
+html[data-theme="dark"] .tabs{background:#0F1B16}
+html[data-theme="dark"] .tabs button.on{background:#16261E;color:#6FDCA1;box-shadow:none}
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea{background:#0F1B16;color:var(--ink);border-color:var(--line)}
+html[data-theme="dark"] ::placeholder{color:#7E958A}
+html[data-theme="dark"] .merr{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.32);color:#FCA5A5}
+html[data-theme="dark"] .pkg.hot{background:#1A2415;border-color:#6B5A24}
+html[data-theme="dark"] .pkg .pnum{color:#EAF3EE}
+html[data-theme="dark"] .toast-success{background:#10251B;border-color:#2A5C40;color:#9FE7BE}
+html[data-theme="dark"] .toast-error{background:#2A1515;border-color:#6B2A2A;color:#FCA5A5}
+html[data-theme="dark"] .toast-info{background:#13241D;border-color:#2A4034;color:#C9D6CF}
+html[data-theme="dark"] footer{background:#081310;border-top:1px solid var(--line)}

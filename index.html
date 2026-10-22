@@ -2,13 +2,31 @@
 <html lang="ms">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FFFFFF" />
     <meta
       name="description"
-      content="FSG Minerals — Global B2B Mineral Trading Platform. Connecting direct mine owners & end buyers. Copper, lithium, gold, coltan, tantalum, tin, titanium, silver."
+      content="First Strategic Global Sdn Bhd — Global Minerals Supply Chain. Kuprum, Titanium, Litium, Koltan, Tantalum, Aurum, Perak, Timah & Aluminium."
     />
-    <title>FSG Minerals — Global B2B Mineral Trading Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="apple-touch-icon" href="/assets/fsg-logo.jpg" />
+    <script>
+      // Lalai CERAH. Pilihan gelap disimpan dalam 'fsg-theme' (kunci sama
+      // dengan halaman korporat lama) dan digunakan sebelum cat pertama.
+      try {
+        var t = localStorage.getItem('fsg-theme');
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    </script>
+    <title>FSG Minerals — First Strategic Global Sdn Bhd</title>
   </head>
   <body>
     <div id="root"></div>
