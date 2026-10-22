@@ -23,7 +23,7 @@ function readTheme() {
   return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
 }
 
-export default function Header({ onLogin, onTopUp }) {
+export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   const { user, tokenBalance } = useAuth()
   const toast = useToast()
   const [theme, setTheme] = useState(readTheme)
@@ -136,12 +136,9 @@ export default function Header({ onLogin, onTopUp }) {
             </span>
           </button>
 
-          <a
-            className="btn primary"
-            href="mailto:info@fsgminerals.trade?subject=Sebutharga%20Mineral%20-%20FSG"
-          >
+          <button type="button" className="btn primary" onClick={onRequestQuote}>
             Minta Sebutharga
-          </a>
+          </button>
         </nav>
       </div>
 
