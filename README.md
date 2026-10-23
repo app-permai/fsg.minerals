@@ -1,5 +1,10 @@
 # FSG Minerals — Platform Security & Monetization Upgrade
 
+> **Read [`AGENTS.md`](./AGENTS.md) first.** It is the authoritative, current
+> record of the schema, RPC grants, product rules and deployment pipeline.
+> This README documents the original upgrade brief and is kept for history;
+> where the two disagree, `AGENTS.md` wins.
+
 **Ringkasan (BM):** Pakej ini menaiktaraf teras fsgminerals.trade dalam 2 bahagian.
 
 **Bahagian A (keselamatan & monetisasi):** (1) maklumat sensitif (syarikat, orang,
@@ -44,7 +49,7 @@ fsg-platform/
 │   │   ├── Toast.jsx                      # toast provider (3 required messages)
 │   │   ├── Header.jsx                     # nav, Log In / Register Free, 🪙 token badge
 │   │   ├── Hero.jsx                       # marketplace tagline + "Register Free & Get 10 Tokens"
-│   │   ├── DirectoryTeaser.jsx            # masked "Latest Buyers & Sellers" directory
+│   │   ├── RadarProspek.jsx               # filterable buyer/supplier radar (masked)
 │   │   ├── HowItWorks.jsx                 # 4-step token process
 │   │   ├── SignUpModal.jsx                # register / log-in modal (guests)
 │   │   ├── TopUpModal.jsx                 # CHIP payment packages modal
@@ -169,22 +174,27 @@ Transforms the homepage from a single-company site into a marketplace.
   client, so the starting balance cannot be forged. Logged-in users see
   "Browse the Marketplace" instead.
 
-### Masked live directory (`DirectoryTeaser.jsx`)
-- "Latest Buyers & Sellers" — table (desktop) / cards (mobile) showing the
-  public fields: Commodity, Volume, Location, Incoterms, Updated date, plus a
-  Buyer/Seller tag (`listings.side`).
-- Company names and phone numbers render as `████████ Co. Ltd` /
-  `+██ ████ ████`. This is cosmetic only — `get_public_listings` v2 (migration
-  04) still returns `••••••••` from the database for locked leads, so a
-  tampered client cannot reveal the real values.
-- Per-row button **"Unlock Contact Details (1 Token)"**:
-  - Guest → opens the Sign-Up modal (no unlock RPC call is even attempted).
-  - Logged in → `unlock_lead` RPC → toast `1 Token Deducted. Lead Unlocked.`
-    → row reveals, header badge refreshes.
-  - Balance hits 0 after the spend, or the RPC raises
-    `INSUFFICIENT_TOKEN_BALANCE` → toast + the **CHIP top-up modal opens
-    automatically**.
-  - Flagged rows show "Reported — paused" and cannot be unlocked.
+### Radar Prospek (`RadarProspek.jsx`)
+
+Embedded in the B2B Marketplace section (`id="marketplace"`). Replaces the
+former `DirectoryTeaser` component, which has been removed.
+
+- **3-step strip:** 1. Cari syarikat → 2. Tarik kontak → 3. Database.
+- **5 live metric cards** from `get_radar_stats()`: active leads, buyers,
+  sellers, countries, commodities.
+- **Filters:** side tabs (Cari Pembeli / Cari Pembekal / Semua), mineral and
+  country selects populated from the full result set, debounced free-text
+  search, and a reset control.
+- **Masked contact rows** (Contact / Phone / Email) render `••••••••` and are
+  clickable. This is cosmetic only — `get_radar_listings()` still returns
+  `••••••••` from the database for locked leads, so a tampered client cannot
+  reveal the real values.
+- Guest clicks on any masked field open the Sign-Up modal; **no unlock RPC is
+  attempted**. Logged-in users call `unlock_lead` → toast
+  `1 Token Deducted. Lead Unlocked.` → row reveals → header badge refreshes.
+  Balance hits 0, or `INSUFFICIENT_TOKEN_BALANCE` is raised → the CHIP top-up
+  modal opens automatically.
+- Flagged rows show "Reported — paused" and cannot be unlocked.
 
 ### How It Works (`HowItWorks.jsx`)
 The 4-step token process: **Register (10 Free Tokens) → Search Leads →
