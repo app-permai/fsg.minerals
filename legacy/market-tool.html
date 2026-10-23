@@ -90,7 +90,7 @@ section.block h2{font-size:26px;margin:0 0 4px;color:#101815}section.block h2 sp
 @media(max-width:900px){.two{grid-template-columns:1fr}}
 input,select,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:15px}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(14,122,82,.15)}
-canvas.chart{width:100%!important;height:280px;background:#F8FAF9;border-radius:14px;border:1px solid var(--border)}
+canvas.chart{display:block;width:100%!important;height:280px;background:#F8FAF9;border-radius:14px;border:1px solid var(--border)}html[data-theme="dark"] canvas.chart{background:#0F1B16;border-color:#24382E}
 .result{background:linear-gradient(135deg,rgba(14,122,82,.12),rgba(14,122,82,.04));border:1px solid var(--gold);border-radius:14px;padding:14px;margin-top:12px}
 .result div{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px dashed rgba(14,122,82,.3);color:#1C2621}
 .result div:last-child{border:none;font-weight:800;font-size:16px;color:var(--gold)}
@@ -152,7 +152,7 @@ footer{margin-top:28px;border-top:2px solid var(--gold);background:#0B2E21;paddi
 <h2 data-i18n-html="chart.title">📈 Carta <span>Pasaran</span></h2>
 <p class="sub" data-i18n="chart.sub">Simulasi 30-hari untuk ilustrasi dari harga semasa + volatiliti. Bar per-kg dalam MYR.</p>
 <div class="two"><div><span class="lbl" data-i18n="chart.mineral">MINERAL UNTUK CARTA</span><select id="chartSelect"></select><div style="height:8px"></div><canvas class="chart" id="lineChart" width="600" height="280"></canvas><p class="meta" id="lineNote"></p></div>
-<div><span class="lbl" data-i18n="chart.perKg">NILAI PER-KG (MYR)</span><canvas class="chart" id="barChart" width="600" height="280"></canvas></div></div>
+<div><span class="lbl" data-i18n="chart.perKg">NILAI PER-KG (MYR)</span><canvas class="chart" id="barChart" width="600" height="280"></canvas><p class="meta" id="barNote"></p></div></div>
 </section>
 
 <section class="block reveal" id="kalkulator">
@@ -262,6 +262,11 @@ const L = {
     'foot.text': 'Harga rujukan dari sumber awam + input manual LME/Fastmarkets. Bukan nasihat pelaburan.',
     'card.live': 'LIVE', 'card.ref': 'Rujukan', 'card.manual': 'Manual • LME ref',
     'chart.note': 'Simulasi trend. Semasa: ${price} / {base}.',
+    'chart.today': 'Hari ini', 'chart.d15': '−15h', 'chart.d30': '−30h',
+    'chart.current': 'Semasa', 'chart.avg30': 'Purata 30h',
+    'chart.low30': '30h Rendah', 'chart.high30': '30h Tinggi',
+    'chart.barNote': 'RM {myr} / kg • USD {usd} / tan • spot {spot} / {base}',
+    'unit.oz': 'oz', 'unit.kg': 'kg',
     'unit.tonne': 'tan',
   },
   en: {
@@ -314,6 +319,11 @@ const L = {
     'foot.text': 'Reference prices from public sources + manual LME/Fastmarkets input. Not investment advice.',
     'card.live': 'LIVE', 'card.ref': 'Reference', 'card.manual': 'Manual • LME ref',
     'chart.note': 'Trend simulation. Current: ${price} / {base}.',
+    'chart.today': 'Today', 'chart.d15': '−15d', 'chart.d30': '−30d',
+    'chart.current': 'Current', 'chart.avg30': '30d Avg',
+    'chart.low30': '30d Low', 'chart.high30': '30d High',
+    'chart.barNote': 'RM {myr} / kg • USD {usd} / tonne • spot {spot} / {base}',
+    'unit.oz': 'oz', 'unit.kg': 'kg',
     'unit.tonne': 'tonne',
   },
 };
@@ -538,36 +548,147 @@ function sel() {
   c1.onchange = line;
 }
 
+/* ---------- geometri carta ----------
+   Kanvas diskalakan ikut DPR dan SEMUA lukisan dibuat dalam CSS px,
+   jadi tiada lagi percanggahan antara saiz backing store dan saiz
+   paparan. Versi lama menetapkan cv.width tetapi tidak pernah
+   menetapkan cv.height — backing store kekal 280px sementara kod
+   melukis pada H=560, jadi separuh bawah carta (termasuk label paksi
+   Y paling bawah) terpotong. */
+const PAD = { top: 20, bottom: 35, left: 55, right: 20 };
+const CH_H = 280; /* mesti padan dengan canvas.chart{height:280px} */
+
+function prep(cv) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const lw = Math.round(cv.clientWidth || cv.parentElement.clientWidth || 600);
+  const lh = CH_H;
+  const bw = Math.round(lw * dpr);
+  const bh = Math.round(lh * dpr);
+  if (cv.width !== bw) cv.width = bw;
+  if (cv.height !== bh) cv.height = bh;
+  const x = cv.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.clearRect(0, 0, lw, lh);
+  return { x: x, lw: lw, lh: lh };
+}
+
+/* Warna carta mengikut tema. Nisbah diukur pada latar kanvas sebenar:
+   cerah #F8FAF9 (paksi 8.28:1, label 7.66:1)
+   gelap  #0F1B16 (paksi 11.92:1, label 10.46:1) */
+function chartInk() {
+  const dk = document.documentElement.getAttribute('data-theme') === 'dark';
+  return dk
+    ? { axis: '#C8D8CE', label: '#6FDCA1', muted: '#8FA79A', grid: 'rgba(200,216,206,.16)',
+        barA: '#4CC38A', barB: '#2FA968' }
+    : { axis: '#3F4F47', label: '#0B5C3F', muted: '#5D7067', grid: 'rgba(61,186,107,.22)',
+        barA: '#0E7A52', barB: '#0B5C3F' };
+}
+
+/* PRNG berbenih: siri 30 hari mesti SAMA setiap kali lukis, kalau tidak
+   angka rendah/tinggi berubah apabila bahasa ditukar atau tetingkap
+   diubah saiz. Benih = id mineral + tarikh (satu siri sehari). */
+function seedOf(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function rng(seed) {
+  let s = seed || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
 function hist(m) {
+  const r = rng(seedOf(m.id + '|' + new Date().toISOString().slice(0, 10)));
   let a = [], p = m.price * (1 - m.vol * 8);
-  for (let i = 0; i < 30; i++) { p *= (1 + (Math.random() - .42) * m.vol * 2); a.push(p); }
+  for (let i = 0; i < 30; i++) { p *= (1 + (r() - .42) * m.vol * 2); a.push(p); }
   a[29] = m.price;
   return a;
 }
 
+function selectedMineral() {
+  const sel = document.getElementById('chartSelect');
+  return M.find((v) => v.id === ((sel && sel.value) || 'COPPER')) || M[0];
+}
+
+/** Harga unit-asal mineral -> MYR per kg (asas perbandingan yang adil). */
+function myrPerKg(m, unitPrice) {
+  return gUSD({ price: unitPrice, base: m.base }) * S.rate * 1000;
+}
+
 function line() {
-  const cv = document.getElementById('lineChart'), x = cv.getContext('2d');
-  const dk = document.documentElement.getAttribute('data-theme') === 'dark';
-  const W = cv.width = cv.clientWidth * 2 || 600, H = 560;
-  x.clearRect(0, 0, W, H);
-  const m = M.find((v) => v.id === (document.getElementById('chartSelect').value || 'COPPER'));
+  const cv = document.getElementById('lineChart');
+  if (!cv) return;
+  const p = prep(cv), x = p.x, lw = p.lw, lh = p.lh;
+  const ink = chartInk();
+  const m = selectedMineral();
   const d = hist(m);
-  const mn = Math.min(...d) * .995, mx = Math.max(...d) * 1.005;
-  const X = (i) => 50 + i / (d.length - 1) * (W - 70);
-  const Y = (v) => H - 50 - ((v - mn) / (mx - mn)) * (H - 110);
-  x.strokeStyle = 'rgba(61,186,107,.18)';
-  x.fillStyle = dk ? '#B7C9BE' : '#9BA9A0';
-  x.font = '20px Manrope';
-  for (let g = 0; g < 5; g++) {
+
+  const lo = Math.min.apply(null, d), hi = Math.max.apply(null, d);
+  const span = (hi - lo) || 1;
+  const mn = lo - span * .08, mx = hi + span * .08;
+
+  const x0 = PAD.left, x1 = lw - PAD.right;
+  const y0 = PAD.top,  y1 = lh - PAD.bottom;
+  const X = (i) => x0 + (i / (d.length - 1)) * (x1 - x0);
+  const Y = (v) => y1 - ((v - mn) / (mx - mn)) * (y1 - y0);
+
+  /* Grid + label paksi Y. textBaseline='middle' memusatkan teks pada
+     garis grid, jadi label paling atas/bawah kekal dalam kotak padding. */
+  x.font = '11px Manrope, system-ui, sans-serif';
+  x.textAlign = 'right';
+  x.textBaseline = 'middle';
+  for (let g = 0; g <= 4; g++) {
     const v = mn + (mx - mn) * g / 4;
-    x.beginPath(); x.moveTo(50, Y(v)); x.lineTo(W - 20, Y(v)); x.stroke();
-    x.fillText(fmt(v), 4, Y(v) + 6);
+    const y = Y(v);
+    x.strokeStyle = ink.grid;
+    x.lineWidth = 1;
+    x.beginPath(); x.moveTo(x0, y); x.lineTo(x1, y); x.stroke();
+    x.fillStyle = ink.axis;
+    x.fillText(fmt(v), x0 - 8, y);
   }
+
+  /* Isi kawasan bawah garis */
   x.beginPath();
   d.forEach((v, i) => (i ? x.lineTo(X(i), Y(v)) : x.moveTo(X(i), Y(v))));
-  const gr = x.createLinearGradient(0, 0, W, 0);
-  gr.addColorStop(0, '#7BD89A'); gr.addColorStop(1, '#0E7A52');
-  x.strokeStyle = gr; x.lineWidth = 5; x.stroke();
+  x.lineTo(X(d.length - 1), y1);
+  x.lineTo(X(0), y1);
+  x.closePath();
+  const fill = x.createLinearGradient(0, y0, 0, y1);
+  fill.addColorStop(0, ink.barA + '33');
+  fill.addColorStop(1, ink.barA + '00');
+  x.fillStyle = fill;
+  x.fill();
+
+  /* Garis tren */
+  x.beginPath();
+  d.forEach((v, i) => (i ? x.lineTo(X(i), Y(v)) : x.moveTo(X(i), Y(v))));
+  const gr = x.createLinearGradient(x0, 0, x1, 0);
+  gr.addColorStop(0, ink.barB);
+  gr.addColorStop(1, ink.barA);
+  x.strokeStyle = gr;
+  x.lineWidth = 2;
+  x.lineJoin = 'round';
+  x.stroke();
+
+  /* Titik semasa */
+  x.beginPath();
+  x.arc(X(d.length - 1), Y(d[29]), 3.5, 0, Math.PI * 2);
+  x.fillStyle = ink.barA;
+  x.fill();
+
+  /* Label paksi X — dalam jalur padding bawah */
+  x.fillStyle = ink.muted;
+  x.font = '10px Manrope, system-ui, sans-serif';
+  x.textBaseline = 'top';
+  x.textAlign = 'left';   x.fillText(tr('chart.d30'), x0, y1 + 12);
+  x.textAlign = 'center'; x.fillText(tr('chart.d15'), (x0 + x1) / 2, y1 + 12);
+  x.textAlign = 'right';  x.fillText(tr('chart.today'), x1, y1 + 12);
+
   document.getElementById('lineNote').textContent = tr('chart.note', {
     price: fmt(m.price),
     base: tr('unit.' + m.unit) || m.base,
@@ -576,24 +697,88 @@ function line() {
 }
 
 function bar() {
-  const cv = document.getElementById('barChart'), x = cv.getContext('2d');
-  const dk = document.documentElement.getAttribute('data-theme') === 'dark';
-  const W = cv.width = cv.clientWidth * 2 || 600, H = 560;
-  x.clearRect(0, 0, W, H);
-  const vs = M.map((m) => ({ m, v: gUSD(m) * S.rate * 1000 }));
-  const mx = Math.max(...vs.map((o) => o.v));
-  const bw = (W - 80) / vs.length;
-  vs.forEach((o, i) => {
-    const h = (H - 140) * (o.v / mx);
-    const px = 50 + i * bw + 8, py = H - 60 - h;
-    const g = x.createLinearGradient(0, py, 0, py + h);
-    g.addColorStop(0, dk ? '#4CC38A' : '#0E7A52');
-    g.addColorStop(1, dk ? '#2FA968' : '#0B5C3F');
-    x.fillStyle = g; x.fillRect(px, py, bw - 18, h);
-    x.fillStyle = dk ? '#B7C9BE' : '#0B5C3F';
-    x.font = 'bold 16px Manrope';
-    x.fillText(o.m.id, px, H - 36);
+  const cv = document.getElementById('barChart');
+  if (!cv) return;
+  const p = prep(cv), x = p.x, lw = p.lw, lh = p.lh;
+  const ink = chartInk();
+  const m = selectedMineral();
+  const d = hist(m);
+
+  const cur = myrPerKg(m, m.price);
+  const sum = d.reduce((a, b) => a + b, 0);
+  const avg = myrPerKg(m, sum / d.length);
+  const low = myrPerKg(m, Math.min.apply(null, d));
+  const high = myrPerKg(m, Math.max.apply(null, d));
+
+  /* Empat bar bagi mineral YANG SAMA — semua dalam MYR/kg, jadi tinggi
+     bar benar-benar setanding. Versi lama membandingkan kesemua 9
+     komoditi pada skala linear yang sama; emas ~RM 529,000/kg lawan
+     kuprum ~RM 58/kg (nisbah 9000x), jadi 8 daripada 9 bar menjadi
+     garis sifar piksel. Itulah "satu bar hijau kosong". */
+  const series = [
+    { k: 'chart.current', v: cur,  primary: true },
+    { k: 'chart.avg30',   v: avg },
+    { k: 'chart.low30',   v: low },
+    { k: 'chart.high30',  v: high },
+  ];
+
+  const maxV = Math.max.apply(null, series.map((s) => s.v)) || 1;
+  const x0 = PAD.left, x1 = lw - PAD.right;
+  const y0 = PAD.top,  y1 = lh - PAD.bottom;
+  const slot = (x1 - x0) / series.length;
+  const bw = Math.min(slot * .58, 58);
+
+  series.forEach(function (s, i) {
+    const cx = x0 + slot * i + slot / 2;
+    const h = Math.max(2, (y1 - y0 - 20) * (s.v / maxV));
+    const top = y1 - h;
+
+    const g = x.createLinearGradient(0, top, 0, y1);
+    g.addColorStop(0, s.primary ? ink.barA : ink.barB);
+    g.addColorStop(1, s.primary ? ink.barB : ink.barA);
+    x.fillStyle = g;
+    x.fillRect(cx - bw / 2, top, bw, h);
+
+    /* Nilai tepat di atas bar — sentiasa kelihatan, bukan tooltip sahaja */
+    x.fillStyle = s.primary ? ink.label : ink.muted;
+    x.font = (s.primary ? 'bold ' : '') + '11px Manrope, system-ui, sans-serif';
+    x.textAlign = 'center';
+    x.textBaseline = 'bottom';
+    x.fillText('RM ' + fmt(s.v, s.v < 100 ? 2 : 0), cx, top - 5);
+
+    /* Label kategori di bawah bar */
+    x.fillStyle = ink.muted;
+    x.font = '10px Manrope, system-ui, sans-serif';
+    x.textBaseline = 'top';
+    x.fillText(tr(s.k), cx, y1 + 12);
   });
+
+  /* Tooltip asli + bacaan dua unit. Nilai sentiasa kelihatan di atas
+     bar; tooltip hanya menambah unit alternatif. */
+  cv._series = series.map(function (s, i) {
+    return { k: s.k, v: s.v, cx: x0 + slot * i + slot / 2, bw: bw };
+  });
+  cv.onmousemove = function (ev) {
+    const r = cv.getBoundingClientRect();
+    const mx = ev.clientX - r.left;
+    const hit = cv._series.filter(function (s) {
+      return Math.abs(mx - s.cx) <= s.bw / 2 + 10;
+    })[0];
+    cv.title = hit
+      ? tr(hit.k) + ': RM ' + fmt(hit.v, 2) + ' / kg  •  USD ' + fmt(hit.v / S.rate * 1000, 0) + ' / t'
+      : '';
+  };
+  cv.onmouseleave = function () { cv.title = ''; };
+
+  const note = document.getElementById('barNote');
+  if (note) {
+    note.textContent = tr('chart.barNote', {
+      myr: fmt(cur, cur < 100 ? 2 : 0),
+      usd: fmt(cur / S.rate * 1000, 0),
+      base: tr('unit.' + m.unit) || m.base,
+      spot: fmt(m.price),
+    });
+  }
 }
 
 function toG(w, u) { return u === 'g' ? w : u === 'kg' ? w * 1000 : u === 'oz' ? w * OZ : w * 1e6; }
