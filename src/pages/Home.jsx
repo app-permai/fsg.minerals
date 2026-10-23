@@ -8,6 +8,7 @@ import Footer from '../components/Footer'
 import SignUpModal from '../components/SignUpModal'
 import TopUpModal from '../components/TopUpModal'
 import RequestQuoteModal from '../components/RequestQuoteModal'
+import { useLang } from '../i18n/LanguageContext'
 
 /**
  * Home — laman utama marketplace B2B dalam reka bentuk korporat
@@ -23,29 +24,27 @@ import RequestQuoteModal from '../components/RequestQuoteModal'
  *  Footer          footer asal
  */
 function CaraBerurusan() {
+  const { t } = useLang()
+
   return (
     <section>
-      <h2 className="sec-title">Cara Berurusan</h2>
-      <p className="sec-sub">Telus dan berdokumen untuk penjual dan pembeli.</p>
+      <h2 className="sec-title">{t('deal.title')}</h2>
+      <p className="sec-sub">{t('deal.sub')}</p>
       <div className="grid3">
         <div className="card">
-          <h3>1. Enquiry</h3>
+          <h3>{t('deal.s1.title')}</h3>
           <p>
-            Hantar berat, gred/assay, lokasi, foto dan Incoterms ke{' '}
+            {t('deal.s1.text')}{' '}
             <a href="mailto:info@fsgminerals.trade">info@fsgminerals.trade</a>.
           </p>
         </div>
         <div className="card">
-          <h3>2. Assay &amp; Sahkan</h3>
-          <p>
-            Minta assay XRF, sahkan spesifikasi, kuantiti dan jadual penghantaran.
-          </p>
+          <h3>{t('deal.s2.title')}</h3>
+          <p>{t('deal.s2.text')}</p>
         </div>
         <div className="card">
-          <h3>3. Sebutharga Rasmi</h3>
-          <p>
-            Terima sebutharga rasmi FSG dengan syarat CIF/FOB dan pembayaran.
-          </p>
+          <h3>{t('deal.s3.title')}</h3>
+          <p>{t('deal.s3.text')}</p>
         </div>
       </div>
     </section>

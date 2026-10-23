@@ -128,22 +128,26 @@ export function useMarketRates({ pollMs = 5 * 60 * 1000 } = {}) {
   return { data, loading, error, source }
 }
 
-/** Label lencana status untuk UI. */
+/**
+ * Label lencana status untuk UI.
+ *
+ * Mengembalikan KUNCI i18n, bukan teks siap — komponen yang memanggil
+ * menentukan bahasa. Ini mengelakkan teks BM terkunci di dalam hook
+ * data dan memaksa setiap pemanggil menyemak sendiri.
+ */
 export function statusBadge({ data, loading, source }) {
-  if (loading) return { text: 'Memuatkan harga…', tone: 'loading' }
+  if (loading) return { textKey: 'status.loading', tone: 'loading', detailKey: null }
   if (data.live) {
     return {
-      text: '🔴 LIVE API ACTIVE',
+      textKey: 'status.live',
       tone: 'live',
-      detail: `${data.liveCount}/${data.total} mineral disuap langsung`,
+      detailKey: 'status.liveDetail',
+      vars: { n: data.liveCount, total: data.total },
     }
   }
   return {
-    text: '⚠️ Rujukan manual',
+    textKey: 'status.manual',
     tone: 'manual',
-    detail:
-      source === 'static'
-        ? 'Suapan langsung tidak dapat dihubungi'
-        : 'Menggunakan cache terakhir',
+    detailKey: source === 'static' ? 'status.staticDetail' : 'status.cacheDetail',
   }
 }

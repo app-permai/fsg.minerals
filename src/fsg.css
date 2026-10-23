@@ -98,6 +98,30 @@ html[data-theme="dark"] .theme-toggle .tt-light{display:inline}
 .btn.primary{background:linear-gradient(135deg,#0E7A52,#0B5C3F);color:#fff;border:none}
 .btn.small{min-height:36px;padding:8px 14px;font-size:12.5px;border-radius:10px}
 
+/* ---------- Butang di atas permukaan gelap (panel hijau) ----------
+   Ditakrifkan sebagai kelas, BUKAN gaya inline, supaya tema gelap tidak
+   boleh menimpanya secara tidak sengaja. Pepijat asal: butang putih di
+   dalam panel mewarisi warna teks .btn tema gelap (--ink = #E7F0EA),
+   menghasilkan putih atas putih — nisbah 1.16:1, teks tidak kelihatan.
+   Pembetulan: #0B5C3F atas #FFFFFF = 8.02:1 (AAA). */
+.btn.on-dark{background:#fff;color:#0B5C3F;border:1px solid transparent;font-weight:800}
+.btn.on-dark:hover{background:#F2F7F4;color:#0B5C3F}
+.btn.ghost-on-dark{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45);font-weight:800}
+.btn.ghost-on-dark:hover{background:rgba(255,255,255,.12);color:#fff}
+.panel-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hero-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+/* ---------- Suis bahasa BM / EN ----------
+   Dua butang dalam satu kapsul. Butang aktif memakai hijau korporat
+   pejal dengan teks putih (nisbah 4.6:1) supaya status bahasa jelas
+   dibaca, bukan hanya perbezaan halus. */
+.lang-toggle{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:10px;border:1px solid var(--line);background:#fff}
+.lang-toggle .lang-btn{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:5px 10px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;transition:.18s}
+.lang-toggle .lang-btn:hover{color:var(--brand);background:var(--bg2)}
+.lang-toggle .lang-btn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.lang-toggle .lang-btn.on:hover{background:var(--brand-deep);color:#fff}
+.lang-toggle .lang-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
 /* ---------- Lencana token emas ---------- */
 .tokbadge{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:8px 15px;border-radius:999px;background:var(--gold-bg);border:1px solid var(--gold-line);color:var(--gold-ink);font-weight:800;font-size:12.5px;cursor:pointer;transition:.2s;font-family:inherit}
 .tokbadge:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(138,107,20,.14)}
@@ -113,9 +137,9 @@ html[data-theme="dark"] .theme-toggle .tt-light{display:inline}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;min-width:135px;box-shadow:var(--shadow)}
 .stat strong{font-family:"Playfair Display";font-size:20px}
 .stat span{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.06em}
-.panel{background:linear-gradient(135deg,#0B2E21,#0E7A52);color:#fff;border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.panel{background:linear-gradient(135deg,#0B2E21,#0B5C3F);color:#fff;border-radius:20px;padding:22px;box-shadow:var(--shadow)}
 .panel h3{font-size:22px;margin-bottom:6px}
-.panel p{font-size:13px;color:#C9D6CF;margin:0 0 12px}
+.panel p{font-size:13px;color:#E9F5EE;margin:0 0 12px}
 
 /* ---------- Kad & grid (asal) ---------- */
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -319,7 +343,20 @@ html[data-theme="dark"] .theme-toggle{background:#13241D;border-color:#2A4034;co
 html[data-theme="dark"] .theme-toggle:hover{border-color:var(--brand);color:var(--brand)}
 html[data-theme="dark"] .menu .authbtn{background:var(--card);border-color:var(--line);color:var(--brand)}
 html[data-theme="dark"] .btn{background:var(--card);color:var(--ink);border-color:var(--line)}
-html[data-theme="dark"] .btn.primary{background:linear-gradient(135deg,#0F8B5C,#0B5C3F);color:#fff;border:none}
+html[data-theme="dark"] .btn.primary{background:linear-gradient(135deg,#0B6B47,#0A4F36);color:#fff;border:none}
+/* Butang atas permukaan gelap mesti kekal boleh dibaca dalam kedua-dua tema. */
+html[data-theme="dark"] .btn.on-dark{background:#fff;color:#0B5C3F}
+html[data-theme="dark"] .btn.on-dark:hover{background:#F2F7F4;color:#0B5C3F}
+html[data-theme="dark"] .btn.ghost-on-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+/* Suis bahasa dalam tema gelap: butang aktif guna hijau terang + teks
+gelap supaya nisbah kekal >7:1, bukan putih atas hijau gelap. */
+html[data-theme="dark"] .lang-toggle{background:#13241D;border-color:#2A4034}
+html[data-theme="dark"] .lang-toggle .lang-btn{color:#9BB2A6}
+html[data-theme="dark"] .lang-toggle .lang-btn:hover{color:#6FDCA1;background:#16261E}
+html[data-theme="dark"] .lang-toggle .lang-btn.on{background:#4CC38A;color:#062018;border-color:#4CC38A}
+html[data-theme="dark"] .lang-toggle .lang-btn.on:hover{background:#6FDCA1;color:#062018}
+html[data-theme="dark"] .panel{background:linear-gradient(135deg,#0B2E21,#0B5C3F);color:#fff}
+html[data-theme="dark"] .panel p{color:#E9F5EE}
 html[data-theme="dark"] .stat{background:var(--card);border-color:var(--line)}
 html[data-theme="dark"] .stat strong{color:#EAF3EE}
 html[data-theme="dark"] .card{background:var(--card);border-color:var(--line)}
@@ -388,6 +425,8 @@ html[data-theme="dark"] footer{background:#081310;border-top:1px solid var(--lin
     border-radius:10px;justify-content:flex-start
   }
   .menu .tokbadge,.menu .theme-toggle{justify-content:center;min-height:44px}
+  .menu .lang-toggle{width:100%;justify-content:center;min-height:44px}
+  .menu .lang-toggle .lang-btn{flex:1 1 auto;justify-content:center;min-height:36px;font-size:13px}
   .menu .btn.primary{width:100%;justify-content:center;min-height:44px}
 
   /* --- Ticker: kekal satu baris, tidak melimpah --- */

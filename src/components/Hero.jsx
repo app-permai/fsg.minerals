@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { useMarketRates, statusBadge } from '../lib/marketRates'
+import { useLang } from '../i18n/LanguageContext'
 
 /**
  * Hero — susun atur & teks asal laman korporat:
@@ -9,73 +10,75 @@ import { useMarketRates, statusBadge } from '../lib/marketRates'
  *
  * Tambahan sahaja: CTA "Register Free & Get 10 Tokens" untuk
  * tetamu (token dikredit oleh trigger database, bukan frontend).
+ *
+ * statusBadge() memulangkan KUNCI i18n (textKey/detailKey), bukan teks
+ * siap — bahasa dipilih di sini melalui t(). Tarikh mengikut bahasa.
  */
 export default function Hero({ onRegister }) {
   const { user } = useAuth()
+  const { lang, t } = useLang()
   const market = useMarketRates({ pollMs: 5 * 60 * 1000 })
   const badge = statusBadge(market)
+
   const stamp = market.data.updatedAt
-    ? new Date(market.data.updatedAt).toLocaleString('ms-MY')
+    ? new Date(market.data.updatedAt).toLocaleString(lang === 'bm' ? 'ms-MY' : 'en-GB')
     : null
+
+  const badgeDetail = badge.detailKey ? t(badge.detailKey, badge.vars) : null
 
   return (
     <div className="container">
       <div className="hero">
         <div>
-          <div className="kicker">SOMALILAND • AFRICA — LME / FASTMARKETS REF</div>
+          <div className="kicker">{t('hero.kicker')}</div>
           <h1>
-            Mineral strategik <em>gred premium,</em> diurus profesional.
+            {t('hero.titleA')} <em>{t('hero.titleB')}</em> {t('hero.titleC')}
           </h1>
           <p className="lead">
-            First Strategic Global Sdn Bhd membekalkan Kuprum, Titanium, Litium,
-            Koltan, Tantalum, Aurum, Perak, Timah &amp; Aluminium. Harga rujukan
-            telus, assay XRF, dan sebutharga rasmi via{' '}
+            {t('hero.lead')}{' '}
             <a href="mailto:info@fsgminerals.trade">info@fsgminerals.trade</a>.
           </p>
 
           <div className="stats">
-            <div className="stat"><strong>9</strong><br /><span>MINERAL FOKUS</span></div>
-            <div className="stat"><strong>LME</strong><br /><span>RUJUKAN SAH</span></div>
-            <div className="stat"><strong>XRF</strong><br /><span>ASSAY SAH</span></div>
-            <div className="stat"><strong>CIF/FOB</strong><br /><span>INCOTERMS</span></div>
+            <div className="stat"><strong>9</strong><br /><span>{t('hero.stat.minerals')}</span></div>
+            <div className="stat"><strong>LME</strong><br /><span>{t('hero.stat.lme')}</span></div>
+            <div className="stat"><strong>XRF</strong><br /><span>{t('hero.stat.xrf')}</span></div>
+            <div className="stat"><strong>CIF/FOB</strong><br /><span>{t('hero.stat.incoterms')}</span></div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+          <div className="hero-actions">
             {user ? (
-              <a className="btn primary" href="#marketplace">Lihat Direktori Lead</a>
+              <a className="btn primary" href="#marketplace">{t('hero.cta.browse')}</a>
             ) : (
-              <button
-                type="button"
-                className="btn primary"
-                onClick={onRegister}
-              >
-                Register Free &amp; Get 10 Tokens
+              <button type="button" className="btn primary" onClick={onRegister}>
+                {t('hero.cta.register')}
               </button>
             )}
-            <a className="btn" href="/market-tool.html">Buka Market Tool</a>
-            <a className="btn" href="/minerals.html">Lihat Minerals</a>
+            <a className="btn" href="/market-tool.html">{t('hero.cta.marketTool')}</a>
+            <a className="btn" href="/minerals.html">{t('hero.cta.minerals')}</a>
           </div>
         </div>
 
         <div className="panel">
-          <h3>Terminal Status — {market.data.live ? 'Aktif' : 'Rujukan'}</h3>
+          <h3>
+            {t('terminal.title')} —{' '}
+            {market.data.live ? t('terminal.active') : t('terminal.reference')}
+          </h3>
           <p>
-            <span className={`livebadge ${badge.tone}`}>{badge.text}</span>
+            <span className={`livebadge ${badge.tone}`}>{t(badge.textKey)}</span>
           </p>
           <p>
-            Kadar USD-MYR {market.data.usdMyr.toFixed(4)}
-            {market.data.fxLive ? ' (live)' : ' (rujukan)'} •{' '}
-            {stamp ? `Kemaskini ${stamp}` : 'Belum disegerakkan'} •{' '}
-            {badge.detail || 'Harga tertakluk pengesahan FSG.'}
+            {t('terminal.rate')} {market.data.usdMyr.toFixed(4)}
+            {market.data.fxLive ? ` (${t('terminal.live')})` : ` (${t('terminal.ref')})`} •{' '}
+            {stamp ? `${t('terminal.updated')} ${stamp}` : t('terminal.notSynced')} •{' '}
+            {badgeDetail || t('terminal.disclaimer')}
           </p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <a className="btn" style={{ background: '#fff' }} href="/market-tool.html#harga">Harga Live</a>
-            <a
-              className="btn"
-              style={{ background: 'transparent', color: '#fff', borderColor: 'rgba(255,255,255,.4)' }}
-              href="/contact.html"
-            >
-              Hubungi FSG
+          <div className="panel-actions">
+            <a className="btn on-dark" href="/market-tool.html#harga">
+              {t('terminal.livePrices')}
+            </a>
+            <a className="btn ghost-on-dark" href="/contact.html">
+              {t('terminal.contactFsg')}
             </a>
           </div>
         </div>

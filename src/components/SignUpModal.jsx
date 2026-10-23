@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useToast } from './Toast'
+import { useLang } from '../i18n/LanguageContext'
 
 /**
  * SignUpModal — modal Log In / Register dalam gaya korporat
@@ -9,9 +10,13 @@ import { useToast } from './Toast'
  * 10 token aluan TIDAK dikreditkan di sini — ia dimasukkan oleh
  * trigger handle_new_user di migration 04, jadi baki permulaan
  * tidak boleh dipalsukan oleh klien.
+ *
+ * Semua teks melalui t(); ralat Supabase (yang datang dari pelayan)
+ * dipaparkan seperti biasa kerana ia mesej teknikal, bukan prosa UI.
  */
 export default function SignUpModal({ open, mode = 'register', onClose }) {
   const toast = useToast()
+  const { t } = useLang()
   const [tab, setTab] = useState(mode) // 'register' | 'login'
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -33,7 +38,7 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
     setError(null)
 
     if (tab === 'register' && password.length < 8) {
-      setError('Kata laluan mestilah sekurang-kurangnya 8 aksara.')
+      setError(t('auth.errPassword'))
       return
     }
 
@@ -48,10 +53,10 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
         if (authError) throw authError
 
         if (data.session) {
-          toast.success('Akaun dicipta. 10 token percuma telah ditambah ke baki anda.')
+          toast.success(t('toast.registered'))
           onClose()
         } else {
-          toast.info('Akaun dicipta. Sila sahkan e-mel anda, kemudian log masuk.')
+          toast.info(t('toast.verifyEmail'))
           setTab('login')
         }
       } else {
@@ -60,11 +65,11 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
           password,
         })
         if (authError) throw authError
-        toast.success('Selamat kembali.')
+        toast.success(t('toast.welcomeBack'))
         onClose()
       }
     } catch (err) {
-      setError(err.message || 'Pengesahan gagal. Sila cuba lagi.')
+      setError(err.message || t('auth.errGeneric'))
     } finally {
       setBusy(false)
     }
@@ -76,18 +81,16 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
       onClick={() => !busy && onClose()}
       role="dialog"
       aria-modal="true"
-      aria-label={tab === 'register' ? 'Cipta akaun' : 'Log masuk'}
+      aria-label={tab === 'register' ? t('auth.ariaCreate') : t('auth.ariaLogin')}
     >
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="mclose" onClick={onClose} aria-label="Tutup">
+        <button type="button" className="mclose" onClick={onClose} aria-label={t('common.close')}>
           ✕
         </button>
 
-        <h2>{tab === 'register' ? 'Cipta akaun percuma anda' : 'Selamat kembali'}</h2>
+        <h2>{tab === 'register' ? t('auth.registerTitle') : t('auth.loginTitle')}</h2>
         <p className="msub">
-          {tab === 'register'
-            ? 'Akaun baharu bermula dengan 10 token percuma.'
-            : 'Log masuk untuk membuka kunci lead dan urus token.'}
+          {tab === 'register' ? t('auth.registerSub') : t('auth.loginSub')}
         </p>
 
         <div className="tabs">
@@ -99,7 +102,7 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
               setError(null)
             }}
           >
-            Register Free
+            {t('auth.tabRegister')}
           </button>
           <button
             type="button"
@@ -109,14 +112,14 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
               setError(null)
             }}
           >
-            Log In
+            {t('auth.tabLogin')}
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           {tab === 'register' && (
             <>
-              <label htmlFor="su-name">Nama penuh</label>
+              <label htmlFor="su-name">{t('auth.name')}</label>
               <input
                 id="su-name"
                 type="text"
@@ -124,12 +127,12 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 autoComplete="name"
-                placeholder="Nama anda"
+                placeholder={t('auth.namePlaceholder')}
               />
             </>
           )}
 
-          <label htmlFor="su-email">E-mel</label>
+          <label htmlFor="su-email">{t('auth.email')}</label>
           <input
             id="su-email"
             type="email"
@@ -137,10 +140,10 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            placeholder="anda@syarikat.com"
+            placeholder={t('auth.emailPlaceholder')}
           />
 
-          <label htmlFor="su-pass">Kata laluan</label>
+          <label htmlFor="su-pass">{t('auth.password')}</label>
           <input
             id="su-pass"
             type="password"
@@ -149,7 +152,9 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
             required
             minLength={tab === 'register' ? 8 : undefined}
             autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
-            placeholder={tab === 'register' ? 'Sekurang-kurangnya 8 aksara' : 'Kata laluan anda'}
+            placeholder={
+              tab === 'register' ? t('auth.passwordNew') : t('auth.passwordExisting')
+            }
           />
 
           {error && <div className="merr">{error}</div>}
@@ -160,14 +165,15 @@ export default function SignUpModal({ open, mode = 'register', onClose }) {
             style={{ width: '100%', marginTop: 16 }}
             disabled={busy}
           >
-            {busy ? 'Sila tunggu…' : tab === 'register' ? 'Register Free & Get 10 Tokens' : 'Log In'}
+            {busy
+              ? t('auth.busy')
+              : tab === 'register'
+                ? t('auth.submitRegister')
+                : t('auth.submitLogin')}
           </button>
         </form>
 
-        <p className="mnote">
-          Dengan teruskan, anda bersetuju dengan terma platform. Pembelian token
-          diproses dengan selamat oleh CHIP Gateway.
-        </p>
+        <p className="mnote">{t('auth.note')}</p>
       </div>
     </div>
   )

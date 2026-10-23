@@ -25,6 +25,14 @@
       } catch (e) {
         document.documentElement.setAttribute('data-theme', 'light');
       }
+      // Bahasa: lalai BM. Dibaca sebelum cat pertama supaya tiada kilat
+      // teks bahasa yang salah. React mengambil alih selepas hydrate.
+      try {
+        var l = localStorage.getItem('fsg-lang');
+        document.documentElement.setAttribute('lang', l === 'en' ? 'en' : 'ms');
+      } catch (e) {
+        document.documentElement.setAttribute('lang', 'ms');
+      }
     </script>
     <title>FSG Minerals — First Strategic Global Sdn Bhd</title>
   </head>

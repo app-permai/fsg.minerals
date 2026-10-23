@@ -151,6 +151,10 @@ src/
   context/AuthContext.jsx    Session + live tokenBalance + refreshBalance
   lib/supabase.js            Client + rpcErrorMessage() code mapping
   lib/packages.js            CHIP package definitions
+  lib/marketRates.js         Live price hook (3-layer fallback) +
+                             statusBadge() which returns i18n KEYS, not text
+  i18n/dictionary.js         ⭐ Single bilingual dictionary, bm + en, 182 keys
+  i18n/LanguageContext.jsx   ⭐ LanguageProvider + useLang() -> {lang, t, setLang}
   fsg.css                    ⭐ Single stylesheet, CSS variables,
                              light (emerald/white) + dark (forest green) themes
 ```
@@ -198,6 +202,77 @@ balanced — do not add them back to the nav.
 
 **Removed:** `DirectoryTeaser.jsx` was deleted and replaced by
 `RadarProspek.jsx`. Do not reintroduce it.
+
+---
+
+## 5a. Bilingual EN/BM (i18n)
+
+The site is fully bilingual. **BM is the default**; the choice persists in
+`localStorage['fsg-lang']` and is read before first paint.
+
+### Architecture
+
+```
+src/i18n/dictionary.js       DICT = { bm: {...}, en: {...} }
+                             LANGUAGES = [{code:'bm',flag:'🇲🇾',label:'BM'}, …]
+src/i18n/LanguageContext.jsx LanguageProvider (outermost in App.jsx)
+                             useLang() -> { lang, setLang, toggleLang, t, isBM }
+legacy/assets/js/i18n.js     Same idea for the non-bundled corporate pages
+                             exposes window.FSG_I18N.t / .setLang / .lang
+```
+
+`LanguageProvider` sits **outside** `ToastProvider` in `App.jsx` so toasts and
+modals can translate too. `t(key, vars)` substitutes `{placeholder}` tokens and
+falls back to BM, warning in DEV when a key is missing.
+
+`index.html` carries a pre-paint script that sets `<html lang>` from
+`localStorage['fsg-lang']`, mirroring the existing `fsg-theme` script. Without
+it the first paint flashes the wrong language.
+
+### Rules
+
+- **Every user-facing string goes through `t()`.** No BM literal in JSX.
+- Keys are `section.camelCase` (`nav.home`, `radar.card.unlock`).
+- Both languages must have every key. `npm run build` will not catch a gap —
+  `t()` falls back to BM, so a missing EN key renders Malay inside an English
+  UI. Check parity before committing.
+- Data modules hold **keys, not text**: `statusBadge()` in `lib/marketRates.js`
+  returns `{textKey, detailKey, vars}` and the component calls `t()`. Do not
+  put finished Malay strings back into data helpers.
+- Mineral names live in `components/minerals.js` as `bm` / `en` / `desc` /
+  `descEn`, read through `mineralName(m, lang)` / `mineralDesc(m, lang)`.
+  The `id` field stays canonical — `create-quote` prices on it.
+- Dates use `toLocaleString(lang === 'bm' ? 'ms-MY' : 'en-GB')`.
+
+### Language switcher
+
+Header shows `🇲🇾 BM | 🇬🇧 EN` next to the theme toggle. Classes `.lang-toggle`
+/ `.lang-btn` (`.on` in the SPA, `.active` in legacy pages). The legacy pages
+get the switch injected automatically by `legacy/assets/js/i18n.js` — do not
+hand-copy the markup into each page.
+
+### Dark-mode contrast (measured, not guessed)
+
+Three pairs failed WCAG AA and were fixed. Do not undo these:
+
+| Element | Old | New | Ratio |
+|---|---|---|---|
+| `.btn.on-dark` text on white | `--ink` #E7F0EA on #FFF | #0B5C3F on #FFF | 1.16 → **8.02:1** |
+| `.panel` body text | #C9D6CF on gradient to #0E7A52 | #E9F5EE on gradient to #0B5C3F | 3.57 → **7.17:1** |
+| `.btn.primary` (dark theme) | #FFF on #0F8B5C | #FFF on #0B6B47 | 4.31 → **6.55:1** |
+
+Rules that follow from this:
+
+- Buttons sitting on the dark green panel use `.btn.on-dark` (white pill,
+  dark green text) or `.btn.ghost-on-dark` (transparent, white text). **Never**
+  inline `style={{background:'#fff'}}` — it inherits `--ink` and goes white-on-white.
+- `.panel` gradient stops at `#0B5C3F`, not `#0E7A52`. The lighter stop is what
+  dragged body text under 4.5:1.
+- Dark-theme `.lang-btn.on` uses `#4CC38A` background with `#062018` text
+  (7.72:1) — not white on green.
+
+Verify with the audit script (see §11). It reads the **built** CSS, so run
+`npm run build` first.
 
 ---
 
@@ -381,6 +456,58 @@ npm install
 npm run build      # vite build + copy legacy pages into dist/
 npm run dev        # vite dev server on :5173
 ```
+
+### Bilingual + contrast checks
+
+Three scripts in `.tmp-test/` (gitignored — recreate if missing; they need
+`jsdom` and `esbuild` from `node_modules`). All three must print `ALL PASS`.
+
+```bash
+# 1. Contrast: parses dist/assets/index-*.css, both themes, real WCAG ratios.
+#    Reads EXACT selectors from the built sheet and fails loudly (MISS) if a
+#    selector or declaration was renamed, instead of measuring the wrong one.
+#    Run npm run build first. Exit 1 on any pair below AA.
+python3 .tmp-test/contrast.py
+
+# 2. SPA render: mounts App in jsdom in BM/light, EN/light, EN/dark, BM/dark,
+#    asserts no BM leakage in EN, no raw i18n keys in the DOM, and that
+#    clicking EN actually flips content and persists the choice.
+node .tmp-test/render.mjs
+
+# 3. Legacy pages: corporate/minerals/contact as real documents — switch
+#    mounts, grid prices live, EN/BM flip works, sendMail still defined.
+node .tmp-test/legacy.mjs
+
+# 4. Market Tool: page renders 9 cards with exactly 4 LIVE pills, hero FX is
+#    the live rate, calculator fills in, EN/BM flip, no untranslated keys.
+#    Needs /tmp/feed.json — capture it first:
+curl -s -X POST "https://wjrlcbhmklodrtpuhprq.supabase.co/functions/v1/market-rates" \
+  -H "apikey: $ANON" -H "Authorization: Bearer $ANON" > /tmp/feed.json
+node .tmp-test/feed.mjs    # unit-level: payload parsing + unit conversion
+node .tmp-test/page.mjs    # DOM-level: the real market-tool.html
+```
+
+Pitfalls these scripts encode, learned the hard way:
+
+- Match **minified** CSS. Vite strips quotes from `url()`, rewrites
+  `[data-theme="dark"]` to `[data-theme=dark]`, lowercases hex, and turns
+  `rgba(0,0,0,.04)` into `#0000000f`. There are several `body{}` rules
+  (Tailwind preflight emits one) — target the one with `background-image`.
+- Do **not** try to emulate CSS specificity on minified output. A token-set
+  matcher resolves `.btn` to `.btn.on-dark` and reports phantom 1.00:1
+  failures. Name exact selectors and the exact surface each sits on.
+- `LanguageProvider` reads `localStorage` on mount only. Remount the React
+  root between language passes or the second pass keeps the first language.
+- `.tmp-test` bundles must mark `react` / `react-dom` / `react/jsx-runtime`
+  as **external**, otherwise the bundled React copy has a null dispatcher
+  (`Cannot read properties of null (reading 'useState')`).
+- `global.navigator` is getter-only in Node 22 — use `Object.defineProperty`.
+- The `useMarketRates` 5-minute poll keeps Node alive; tests must call
+  `process.exit()`.
+- Assert on `input.value`, not `textContent`, for `<input>` elements.
+- Strip `<script>` before scanning rendered text for leaked i18n keys — the
+  dictionary itself lives in a script tag.
+
 
 `.env` must define `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. It is
 gitignored; never commit it and never put a service_role key in the frontend.
