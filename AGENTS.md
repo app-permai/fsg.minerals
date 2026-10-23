@@ -154,11 +154,34 @@ src/
 ```
 
 **Theme:** Emerald green `#0E7A52` on a soft warm-grey page background
-`#F6F7F6` (deliberately NOT pure white — reduces glare), Playfair Display
+`#F4F6F5` (deliberately NOT pure white — reduces glare), Playfair Display
 headings + Manrope body. Cards use `border-radius:12px` and
 `box-shadow:0 2px 8px rgba(0,0,0,.04)`. Dark mode is forest green `#0A1410`,
 never navy. Toggle writes `data-theme` on `<html>` and persists to
 `localStorage['fsg-theme']`.
+
+**Background — soft geometric polygons.** The page background is two CSS
+layers on `body`, declared through tokens in `:root`:
+
+```
+background-image: var(--poly-veil), var(--poly);
+background-size:  cover, 720px 720px;
+background-repeat: no-repeat, repeat;
+background-attachment: fixed, fixed;
+```
+
+- `--poly` is an inline SVG data-URI (720×720 tile, ~1.2 KB) of 32
+  alternating triangles in two opacities — `#0E7A52` at `.055` and `.028`
+  for light mode, `#4CC38A` for dark.
+- `--poly-veil` is the `135deg` gradient painted ON TOP of the polygons
+  (first layer in `background-image` renders topmost). This veil is what
+  keeps the pattern low-glare; removing it makes the triangles harsh.
+- Both tokens are redefined in the `html[data-theme="dark"]` block.
+
+⚠️ Do not set `background:` (shorthand) on `body` or on
+`html[data-theme="dark"] body` — the shorthand resets `background-image`
+and silently erases the polygons. Use `background-color:` for colour.
+This is why the dark rule is only `html[data-theme="dark"] body{color:…}`.
 
 **Responsive:** breakpoint is `<768px`. Below it the header collapses to a
 hamburger (`.navtoggle` + `.menu.open`), the directory grid drops to one
