@@ -62,7 +62,16 @@ export default function Footer() {
         <p className="foot-note">
           {t('footer.contact')}{' '}
           <a href="mailto:info@fsgminerals.trade">info@fsgminerals.trade</a> •
-          fsgminerals.trade • © 2026 FIRST STRATEGIC GLOBAL SDN BHD (1665935-K)
+          fsgminerals.trade • © 2026 FIRST STRATEGIC GLOBAL SDN BHD (1665935-K) •{' '}
+          {t('footer.developed_by')}{' '}
+          <a
+            className="foot-credit"
+            href="https://nagasaribu.online"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Nagasaribu.online
+          </a>
         </p>
       </div>
     </footer>

@@ -241,6 +241,13 @@ input:focus,textarea:focus{outline:2px solid rgba(14,122,82,.25);border-color:va
 /* ---------- Footer (asal) ---------- */
 footer{background:#0B2E21;color:#C9D6CF;font-size:12px;margin-top:30px;padding:26px 0 40px}
 footer a{color:#8FDCB0}
+/* Kredit pembangun di footer. Warna = #8FDCB0 yang sama dengan pautan footer
+   lain: 9.13:1 pada #0B2E21 (terang) dan 11.73:1 pada #081310 (gelap) — lulus
+   WCAG AA dan AAA. JANGAN guna #0E7A52 di sini: hanya 2.75:1 pada footer hijau
+   gelap. Garis bawah dianimasikan melalui text-decoration-color supaya tiada
+   reflow pada hover. */
+.foot-credit{color:#8FDCB0;font-weight:700;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:2px;transition:text-decoration-color .18s ease,color .18s ease}
+.foot-credit:hover,.foot-credit:focus-visible{color:#C9D6CF;text-decoration-color:currentColor}
 
 /* ---------- Status kosong direktori ---------- */
 .empty-dir{text-align:center;padding:44px 20px}

@@ -251,6 +251,50 @@ Header shows `🇲🇾 BM | 🇬🇧 EN` next to the theme toggle. Classes `.lan
 get the switch injected automatically by `legacy/assets/js/i18n.js` — do not
 hand-copy the markup into each page.
 
+### Three dictionaries, not one
+
+The new key must be added in **three** places or one surface shows a raw key:
+
+| Dictionary | Covers |
+|---|---|
+| `src/i18n/dictionary.js` | the React SPA (bundled) |
+| `legacy/assets/js/i18n.js` | corporate.html, minerals.html, contact.html |
+| the inline `L` object in `legacy/market-tool.html` | market-tool.html only |
+
+`market-tool.html` **does not load** `assets/js/i18n.js` — its entire runtime
+(including the dictionary) is one inline `<script>`. That is why it needs its
+own copy of any new key. Its key prefix is `foot.` for the legacy disclaimer
+strings but new keys must use the same `footer.` prefix as the SPA, so one key
+name means one thing across all three runtimes.
+
+### Footer developer credit
+
+`• Dibangunkan oleh Nagasaribu.online` (BM) / `• Developed by Nagasaribu.online`
+(EN), rendered from `t('footer.developed_by')` plus a fixed `Nagasaribu.online`
+link (`target="_blank" rel="noopener noreferrer"`). Appears in
+`src/components/Footer.jsx` and the four `legacy/*.html` footers.
+
+Style class `.foot-credit`, defined **identically** in `src/fsg.css` and
+`legacy/assets/css/theme.css` (not `style.css` — `market-tool.html` loads only
+`theme.css`). Colour is `#8FDCB0`, the same as every other footer link:
+
+| Surface | Ratio | Verdict |
+|---|---|---|
+| `#8FDCB0` on `#0B2E21` (light footer) | **9.13:1** | AA + AAA |
+| `#8FDCB0` on `#081310` (dark footer) | **11.73:1** | AA + AAA |
+| `#0E7A52` on `#0B2E21` (the `--accent-gold` fallback) | 2.75:1 | **fails AA — do not use** |
+| `#0E7A52` on `#081310` | 3.53:1 | **fails AA — do not use** |
+
+The underline is always present but `text-decoration-color: transparent`, and
+hover flips it to `currentColor` (text also lightens to `#C9D6CF`). Reserving
+the underline avoids the horizontal reflow a `text-decoration: none` → `underline`
+toggle causes at the end of a long wrapping line.
+
+`market-tool.html` ships an inline `a{color:var(--gold)}`. A bare element
+selector is specificity (0,0,1) and cannot beat `.foot-credit` (0,1,0), so the
+credit keeps its footer colour there too. If that inline rule ever grows into
+`footer a.foot-credit`, the credit will silently turn green-on-green.
+
 ### Dark-mode contrast (measured, not guessed)
 
 Three pairs failed WCAG AA and were fixed. Do not undo these:
@@ -459,27 +503,41 @@ npm run dev        # vite dev server on :5173
 
 ### Bilingual + contrast checks
 
-Three scripts in `.tmp-test/` (gitignored — recreate if missing; they need
-`jsdom` and `esbuild` from `node_modules`). All three must print `ALL PASS`.
+Scripts in `.tmp-test/` (gitignored — recreate if missing; they need `jsdom`
+and `esbuild` from `node_modules`). All of them must print `ALL PASS`.
 
 ```bash
-# 1. Contrast: parses dist/assets/index-*.css, both themes, real WCAG ratios.
-#    Reads EXACT selectors from the built sheet and fails loudly (MISS) if a
-#    selector or declaration was renamed, instead of measuring the wrong one.
-#    Run npm run build first. Exit 1 on any pair below AA.
+# 1. Contrast: parses the BUILT css (dist/assets/index-*.css,
+#    dist/assets/css/{style,theme}.css), both themes, real WCAG ratios.
+#    Rules are located by parsing (selector, body) pairs and comparing
+#    selector strings EXACTLY, then failing loudly if one was renamed —
+#    instead of measuring the wrong rule. Run npm run build first.
+#    Exit 1 on any pair below AA.
 python3 .tmp-test/contrast.py
 
-# 2. SPA render: mounts App in jsdom in BM/light, EN/light, EN/dark, BM/dark,
-#    asserts no BM leakage in EN, no raw i18n keys in the DOM, and that
-#    clicking EN actually flips content and persists the choice.
+# 2. SPA render: mounts Header + Footer in jsdom in BM/light, EN/light,
+#    EN/dark, BM/dark, asserts no BM leakage in EN, no raw i18n keys in the
+#    DOM, and that the built CSS actually ships the credit rules.
 node .tmp-test/render.mjs
 
-# 3. Legacy pages: corporate/minerals/contact as real documents — switch
-#    mounts, grid prices live, EN/BM flip works, sendMail still defined.
+# 3. Legacy pages: corporate/minerals/contact/market-tool as real documents.
+#    Executes exactly the scripts each page declares — src= AND inline.
 node .tmp-test/legacy.mjs
 
-# 4. Market Tool: page renders 9 cards with exactly 4 LIVE pills, hero FX is
-#    the live rate, calculator fills in, EN/BM flip, no untranslated keys.
+# 4. Footer credit: dictionary parity across all three dictionaries, the
+#    credit's href/target/rel/class, BM/EN resolution, and source invariants.
+node .tmp-test/footer.mjs
+
+# 4b. Same suite against a PRE-FIX tree — proves the suite is not vacuous.
+#     Must report failures; if it passes, the assertions do not bite.
+rm -rf /tmp/prefix-tree && mkdir -p /tmp/prefix-tree
+for f in corporate.html minerals.html contact.html market-tool.html; do
+  git show HEAD:legacy/$f > /tmp/prefix-tree/$f
+done
+DIST_DIR=/tmp/prefix-tree node .tmp-test/footer.mjs   # expect FAILURES
+
+# 5. Market Tool feed: page renders 9 cards with exactly 4 LIVE pills, hero FX
+#    is the live rate, calculator fills in, EN/BM flip, no untranslated keys.
 #    Needs /tmp/feed.json — capture it first:
 curl -s -X POST "https://wjrlcbhmklodrtpuhprq.supabase.co/functions/v1/market-rates" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON" > /tmp/feed.json
@@ -496,17 +554,38 @@ Pitfalls these scripts encode, learned the hard way:
 - Do **not** try to emulate CSS specificity on minified output. A token-set
   matcher resolves `.btn` to `.btn.on-dark` and reports phantom 1.00:1
   failures. Name exact selectors and the exact surface each sits on.
+- A hand-rolled CSS rule parser must strip `/* comments */` first, or the
+  selector text before a `{` swallows the preceding comment and every lookup
+  after it misses.
 - `LanguageProvider` reads `localStorage` on mount only. Remount the React
   root between language passes or the second pass keeps the first language.
 - `.tmp-test` bundles must mark `react` / `react-dom` / `react/jsx-runtime`
   as **external**, otherwise the bundled React copy has a null dispatcher
   (`Cannot read properties of null (reading 'useState')`).
+- Write the esbuild bundle to a real file and import it by path. A `data:` URL
+  cannot resolve bare specifiers (`ERR_UNSUPPORTED_RESOLVE_REQUEST`).
+- `import.meta.env` is substituted by Vite at build time; the esbuild harness
+  must `define` it or the supabase client throws at module scope.
 - `global.navigator` is getter-only in Node 22 — use `Object.defineProperty`.
 - The `useMarketRates` 5-minute poll keeps Node alive; tests must call
   `process.exit()`.
 - Assert on `input.value`, not `textContent`, for `<input>` elements.
 - Strip `<script>` before scanning rendered text for leaked i18n keys — the
   dictionary itself lives in a script tag.
+- When checking for leaked i18n keys, compare against the **actual** key list
+  from the dictionary. A loose `\b(?:footer|nav|contact)\.[\w.]+\b` pattern
+  flags the filename `contact.html` as a leaked key.
+- Legacy pages do **not** share one runtime. `market-tool.html` runs an inline
+  `<script>` with its own dictionary and never loads `assets/js/i18n.js`. A
+  harness that only evaluates `src=` scripts leaves it on its BM defaults and
+  reports phantom translation failures. Parse every `<script>` and eval inline
+  bodies too.
+- jsdom has no `IntersectionObserver`, `ResizeObserver`, or canvas 2D context.
+  Stub all three before evaluating a page script, or the script throws midway
+  and `applyI18n()` never runs — which also looks like a translation bug.
+- Assert the credit against `.tmp-test`'s PRE-FIX tree (`DIST_DIR=`) at least
+  once. Every suite here passed vacuously at some point before that check
+  existed.
 
 
 `.env` must define `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. It is

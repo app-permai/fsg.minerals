@@ -102,6 +102,11 @@ html[data-theme="dark"] select,
 html[data-theme="dark"] textarea{background:#0F1B16;color:var(--ink);border-color:var(--line)}
 html[data-theme="dark"] .badge{background:rgba(76,195,138,.12);color:#7BD89A;border-color:var(--line)}
 html[data-theme="dark"] footer{background:#081310;border-top:1px solid var(--line)}
+/* Kredit pembangun footer. Peraturan ini mesti tinggal di theme.css kerana
+   market-tool.html HANYA memuatkan theme.css (bukan style.css), dan keempat-
+   empat halaman legacy perlu gaya yang sama. */
+.foot-credit{color:#8FDCB0;font-weight:700;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:2px;transition:text-decoration-color .18s ease,color .18s ease}
+.foot-credit:hover,.foot-credit:focus-visible{color:#C9D6CF;text-decoration-color:currentColor}
 html[data-theme="dark"] ::placeholder{color:#7E958A}
 
 /* ---------- Halaman: market-tool.html ---------- */
