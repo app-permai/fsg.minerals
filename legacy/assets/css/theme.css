@@ -53,6 +53,34 @@ html[data-theme="dark"] .theme-toggle:hover{border-color:var(--brand);color:var(
 /* Saiz padan dalam header market-tool */
 .top-actions .theme-toggle{min-height:36px;padding:8px 12px;font-size:12px}
 
+/* ---------- Suis bahasa BM / EN (halaman korporat) ----------
+   Dua butang dalam satu kapsul, sama seperti SPA React. Butang aktif
+   memakai hijau korporat pejal dengan teks putih supaya status bahasa
+   jelas dibaca, bukan hanya perbezaan halus. Dalam tema gelap butang
+   aktif bertukar hijau terang + teks gelap (nisbah >7:1). */
+.lang-toggle{
+  display:inline-flex;align-items:center;gap:2px;padding:3px;
+  border-radius:10px;border:1px solid var(--line,var(--border,#DCE7E0));
+  background:var(--card,#fff);
+}
+.lang-toggle .lang-btn{
+  display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:6px 11px;
+  border-radius:8px;border:1px solid transparent;background:transparent;
+  color:var(--muted,var(--gold,#5D7067));
+  font:inherit;font-family:inherit;font-size:12px;font-weight:800;line-height:1;
+  cursor:pointer;transition:.18s;
+}
+.lang-toggle .lang-btn:hover{color:var(--brand,var(--gold,#0E7A52));background:var(--bg2,#EDF1EF)}
+.lang-toggle .lang-btn.active{
+  background:var(--brand,var(--gold,#0E7A52));color:#fff;
+  border-color:var(--brand,var(--gold,#0E7A52));
+}
+.lang-toggle .lang-btn:focus-visible{outline:2px solid var(--brand,var(--gold,#0E7A52));outline-offset:2px}
+html[data-theme="dark"] .lang-toggle{background:#13241D;border-color:#2A4034}
+html[data-theme="dark"] .lang-toggle .lang-btn{color:#9BB2A6}
+html[data-theme="dark"] .lang-toggle .lang-btn:hover{color:#6FDCA1;background:#16261E}
+html[data-theme="dark"] .lang-toggle .lang-btn.active{background:#4CC38A;color:#062018;border-color:#4CC38A}
+
 @media(max-width:560px){
   .theme-toggle .tt-label{display:none}
   .theme-toggle{min-width:42px;padding:10px 12px}

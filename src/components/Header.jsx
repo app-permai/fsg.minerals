@@ -2,15 +2,21 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
-import { MINERALS } from './minerals'
+import { MINERALS, mineralName } from './minerals'
 import { useMarketRates, priceIn } from '../lib/marketRates'
+import { useLang } from '../i18n/LanguageContext'
+import { LANGUAGES } from '../i18n/dictionary'
 
 /**
  * Header — susun atur korporat:
  * logo bumi + nama syarikat + no. SSM + lencana "Global Minerals
  * Supply Chain", nav utama (Home / Radar Prospek / Market Tool /
  * Contact), tindakan sekunder (Log Masuk / Daftar, lencana token,
- * Minta Sebutharga), toggle Cerah/Gelap, dan ticker harga hijau.
+ * Minta Sebutharga), suis bahasa BM/EN, toggle Cerah/Gelap, dan
+ * ticker harga hijau.
+ *
+ * Semua teks melalui t() daripada LanguageContext — tiada lagi teks
+ * BM terkunci di dalam JSX.
  *
  * Pautan korporat kurang kritikal (Minerals, Corporate) dipindahkan
  * ke Footer supaya header kekal seimbang.
@@ -19,10 +25,10 @@ import { useMarketRates, priceIn } from '../lib/marketRates'
  * dalam panel hamburger. Ticker kekal satu baris dan menatal.
  */
 const PRIMARY_NAV = [
-  { href: '/', label: 'Home' },
-  { href: '#marketplace', label: 'Radar Prospek' },
-  { href: '/market-tool.html', label: 'Market Tool' },
-  { href: '/contact.html', label: 'Contact' },
+  { href: '/', key: 'nav.home' },
+  { href: '#marketplace', key: 'nav.radar' },
+  { href: '/market-tool.html', key: 'nav.marketTool' },
+  { href: '/contact.html', key: 'nav.contact' },
 ]
 
 function readTheme() {
@@ -33,6 +39,7 @@ function readTheme() {
 export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   const { user, tokenBalance } = useAuth()
   const toast = useToast()
+  const { lang, setLang, t } = useLang()
   const [theme, setTheme] = useState(readTheme)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -43,6 +50,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   const tickerText =
     MINERALS.map((m) => {
       const live = byId.get(m.rateId)
+      const name = mineralName(m, lang)
       if (live?.isLive) {
         const v = priceIn(live.usdPerKg, m.unit)
         const dp = m.unit === 'oz' ? 2 : 0
@@ -50,9 +58,9 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
           minimumFractionDigits: dp,
           maximumFractionDigits: dp,
         })
-        return `⭐ ${m.bm}: $${s}`
+        return `⭐ ${name}: $${s}`
       }
-      return `⭐ ${m.bm}: ${m.price}`
+      return `⭐ ${name}: ${m.price}`
     }).join(' • ') + ' • '
 
   /* Tutup panel apabila viewport melebar melepasi breakpoint mudah alih. */
@@ -67,7 +75,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   async function handleSignOut() {
     setMenuOpen(false)
     await supabase.auth.signOut()
-    toast.info('Anda telah log keluar.')
+    toast.info(t('toast.signedOut'))
   }
 
   function toggleTheme() {
@@ -84,6 +92,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   }
 
   const dark = theme === 'dark'
+  const themeLabel = dark ? t('nav.toLight') : t('nav.toDark')
 
   return (
     <header className="site">
@@ -107,7 +116,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
           className="navtoggle"
           aria-expanded={menuOpen}
           aria-controls="primary-nav"
-          aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+          aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
           onClick={() => setMenuOpen((v) => !v)}
         >
           <span className="bars" aria-hidden="true">
@@ -118,7 +127,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
         <nav
           id="primary-nav"
           className={menuOpen ? 'menu open' : 'menu'}
-          aria-label="Menu utama"
+          aria-label={t('nav.mainMenu')}
         >
           <div className="menu-links">
             {PRIMARY_NAV.map((n) => (
@@ -128,7 +137,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
                 className={n.href === '/' ? 'active' : undefined}
                 onClick={() => setMenuOpen(false)}
               >
-                {n.label}
+                {t(n.key)}
               </a>
             ))}
           </div>
@@ -146,10 +155,10 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
                   }}
                   title="Baki token — klik untuk top-up CHIP"
                 >
-                  🪙 {tokenBalance ?? '—'} Tokens
+                  🪙 {tokenBalance ?? '—'} {t('nav.tokens')}
                 </button>
                 <button type="button" onClick={handleSignOut} title={user.email}>
-                  Log Keluar
+                  {t('nav.logout')}
                 </button>
               </>
             ) : (
@@ -161,9 +170,33 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
                   onLogin()
                 }}
               >
-                Log Masuk / Daftar
+                {t('nav.login')}
               </button>
             )}
+
+            {/* Suis bahasa BM / EN */}
+            <div
+              className="lang-toggle"
+              role="group"
+              aria-label={t('nav.langSwitch')}
+              title={t('nav.langSwitch')}
+            >
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  className={lang === l.code ? 'lang-btn on' : 'lang-btn'}
+                  aria-pressed={lang === l.code}
+                  lang={l.code === 'bm' ? 'ms' : 'en'}
+                  onClick={() => {
+                    setMenuOpen(false)
+                    setLang(l.code)
+                  }}
+                >
+                  <span aria-hidden="true">{l.flag}</span> {l.label}
+                </button>
+              ))}
+            </div>
 
             {/* Toggle Cerah/Gelap asal — lalai cerah */}
             <button
@@ -172,8 +205,8 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
               data-theme-toggle
               onClick={toggleTheme}
               aria-pressed={dark}
-              aria-label={dark ? 'Tukar ke mod cerah' : 'Tukar ke mod gelap'}
-              title={dark ? 'Tukar ke mod cerah' : 'Tukar ke mod gelap'}
+              aria-label={themeLabel}
+              title={themeLabel}
             >
               <svg
                 className="i-moon"
@@ -201,8 +234,8 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
                 <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
               </svg>
               <span className="tt-label">
-                <span className="tt-dark">Gelap</span>
-                <span className="tt-light">Cerah</span>
+                <span className="tt-dark">{t('nav.themeDark')}</span>
+                <span className="tt-light">{t('nav.themeLight')}</span>
               </span>
             </button>
 
@@ -214,7 +247,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
                 onRequestQuote()
               }}
             >
-              Minta Sebutharga
+              {t('nav.requestQuote')}
             </button>
           </div>
         </nav>

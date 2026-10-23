@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase, rpcErrorMessage } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
+import { useLang } from '../i18n/LanguageContext'
 
 /**
  * RadarProspek — modul carian pembeli / pembekal / pengilang ("Radar Prospek").
@@ -21,44 +22,57 @@ import { useToast } from './Toast'
  * Tetamu boleh melayari seluruh direktori secara percuma. Menekan
  * mana-mana medan bertopeng atau butang buka kunci akan membuka
  * modal daftar (10 token percuma dikredit oleh trigger database).
+ *
+ * Semua label melalui t() daripada LanguageContext — kunci disimpan
+ * dalam pemalar, bukan teks BM siap.
  */
 const MASKED = '••••••••'
 
 const SIDE_TABS = [
-  { key: 'buy', label: 'Cari Pembeli', short: 'Pembeli' },
-  { key: 'sell', label: 'Cari Pembekal', short: 'Pembekal' },
-  { key: 'process', label: 'Cari Pengilang Pemprosesan', short: 'Pemprosesan' },
-  { key: null, label: 'Semua', short: 'Semua' },
+  { key: 'buy', labelKey: 'radar.tab.buy', shortKey: 'radar.tab.buyShort' },
+  { key: 'sell', labelKey: 'radar.tab.sell', shortKey: 'radar.tab.sellShort' },
+  { key: 'process', labelKey: 'radar.tab.process', shortKey: 'radar.tab.processShort' },
+  { key: null, labelKey: 'radar.tab.all', shortKey: 'radar.tab.allShort' },
 ]
 
-/** Label + kelas lencana bagi setiap kategori direktori. */
+/** Kunci label + kelas lencana bagi setiap kategori direktori. */
 const SIDE_BADGE = {
-  buy: { label: 'Pembeli', cls: 'buy' },
-  sell: { label: 'Pembekal', cls: 'sell' },
-  process: { label: 'PEMPROSESAN', cls: 'process' },
+  buy: { key: 'radar.badge.buy', cls: 'buy' },
+  sell: { key: 'radar.badge.sell', cls: 'sell' },
+  process: { key: 'radar.badge.process', cls: 'process' },
 }
 
 const STEPS = [
+  { n: '1', titleKey: 'radar.step1.title', textKey: 'radar.step1.text' },
+  { n: '2', titleKey: 'radar.step2.title', textKey: 'radar.step2.text' },
+  { n: '3', titleKey: 'radar.step3.title', textKey: 'radar.step3.text' },
+]
+
+/** Senarai kad metrik; kunci disimpan supaya bahasa boleh bertukar tanpa muat semula. */
+const METRIC_DEFS = [
+  { field: 'total_leads', labelKey: 'radar.metric.leads', subKey: 'radar.metric.leadsSub' },
+  { field: 'buyer_count', labelKey: 'radar.metric.buyers', subKey: 'radar.metric.buyersSub' },
+  { field: 'seller_count', labelKey: 'radar.metric.sellers', subKey: 'radar.metric.sellersSub' },
   {
-    n: '1',
-    title: 'Cari syarikat',
-    text: 'Tapis mengikut kategori, mineral dan negara. Semua kad boleh dilihat percuma.',
+    field: 'processor_count',
+    labelKey: 'radar.metric.processors',
+    subKey: 'radar.metric.processorsSub',
   },
   {
-    n: '2',
-    title: 'Tarik kontak',
-    text: 'Tukar 1 token untuk mendedahkan syarikat, kontak, telefon, e-mel dan alamat lombong.',
+    field: 'country_count',
+    labelKey: 'radar.metric.countries',
+    subKey: 'radar.metric.countriesSub',
   },
   {
-    n: '3',
-    title: 'Database',
-    text: 'Setiap lead disimpan dalam pangkalan data langsung — bukan senarai statik.',
+    field: 'commodity_count',
+    labelKey: 'radar.metric.commodities',
+    subKey: 'radar.metric.commoditiesSub',
   },
 ]
 
-function fmtDate(iso) {
+function fmtDate(iso, locale) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-GB', {
+  return new Date(iso).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -66,22 +80,18 @@ function fmtDate(iso) {
 }
 
 function SideTag({ side }) {
-  const b = SIDE_BADGE[side] || { label: side || '—', cls: 'sell' }
-  return <span className={`sidebadge ${b.cls}`}>{b.label}</span>
+  const { t } = useLang()
+  const b = SIDE_BADGE[side]
+  return <span className={`sidebadge ${b?.cls || 'sell'}`}>{b ? t(b.key) : side || '—'}</span>
 }
 
 /** Satu medan kontak; bertopeng = boleh diklik untuk membuka daftar. */
-function ContactRow({ label, value, locked, onLockedClick }) {
+function ContactRow({ label, value, locked, onLockedClick, lockedHint }) {
   return (
     <div className="rp-contact">
       <span className="k">{label}</span>
       {locked ? (
-        <button
-          type="button"
-          className="v masked-val"
-          onClick={onLockedClick}
-          title="Daftar percuma untuk membuka kontak ini"
-        >
+        <button type="button" className="v masked-val" onClick={onLockedClick} title={lockedHint}>
           {MASKED}
         </button>
       ) : (
@@ -104,6 +114,7 @@ function MetricCard({ value, label, sub }) {
 export default function RadarProspek({ onRequireAuth, onTopUp }) {
   const { user, refreshBalance } = useAuth()
   const toast = useToast()
+  const { lang, t } = useLang()
 
   const [side, setSide] = useState(null)
   const [mineral, setMineral] = useState('')
@@ -173,8 +184,8 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
 
   /* debounce carian */
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput.trim()), 350)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 350)
+    return () => clearTimeout(timer)
   }, [searchInput])
 
   /* ---------- buka kunci (1 token) ---------- */
@@ -191,9 +202,9 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
       if (rpcError) throw rpcError
 
       if (data.status === 'unlocked') {
-        toast.success('1 Token Deducted. Lead Unlocked.')
+        toast.success(t('toast.unlocked'))
       } else {
-        toast.info('Butiran kontak tersedia.')
+        toast.info(t('toast.detailsReady'))
       }
 
       await refreshBalance()
@@ -224,80 +235,85 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
 
   const metricCards = useMemo(() => {
     const s = stats || {}
-    return [
-      { value: s.total_leads, label: 'LEAD AKTIF', sub: 'semua kategori' },
-      { value: s.buyer_count, label: 'PEMBELI', sub: 'permintaan aktif' },
-      { value: s.seller_count, label: 'PEMBEKAL', sub: 'bekalan tersedia' },
-      { value: s.processor_count, label: 'PEMPROSESAN', sub: 'smelter / refinery' },
-      { value: s.country_count, label: 'NEGARA', sub: 'liputan sumber' },
-      { value: s.commodity_count, label: 'KOMODITI', sub: 'jenis mineral' },
-    ]
-  }, [stats])
+    return METRIC_DEFS.map((d) => ({
+      value: s[d.field],
+      label: t(d.labelKey),
+      sub: t(d.subKey),
+    }))
+  }, [stats, t])
 
   function renderCard(lead) {
     const unlocked = !!lead.has_unlocked_contact
     const location = [lead.region, lead.country].filter(Boolean).join(', ') || '—'
+    const lockedHint = t('radar.card.ariaUnlock')
 
     return (
       <article className="leadcard rp-card" key={lead.id}>
         <div className="lc-top">
           <SideTag side={lead.side} />
-          {lead.verified && !lead.flagged && <span className="vcheck">✓ Disahkan</span>}
+          {lead.verified && !lead.flagged && (
+            <span className="vcheck">{t('radar.card.verified')}</span>
+          )}
         </div>
 
         <h3 className="lc-title">{lead.title || '—'}</h3>
 
         <h4 className={`rp-co${unlocked ? '' : ' masked'}`}>
-          {unlocked ? lead.company_name || '—' : '████████ Co. Ltd'}
+          {unlocked ? lead.company_name || '—' : t('radar.card.maskedCompany')}
         </h4>
 
         <div className="lc-meta">
           <div>
-            <span className="k">Komoditi</span>
+            <span className="k">{t('radar.card.commodity')}</span>
             <span className="v">{lead.mineral_type || '—'}</span>
           </div>
           <div>
-            <span className="k">Volum</span>
+            <span className="k">{t('radar.card.volume')}</span>
             <span className="v">{lead.quantity_available || '—'}</span>
           </div>
           <div>
-            <span className="k">Lokasi</span>
+            <span className="k">{t('radar.card.location')}</span>
             <span className="v">{location}</span>
           </div>
           <div>
-            <span className="k">Incoterms</span>
+            <span className="k">{t('radar.card.incoterms')}</span>
             <span className="v">{lead.incoterms || '—'}</span>
           </div>
         </div>
 
         <div className="rp-contacts">
           <ContactRow
-            label="Kontak"
+            label={t('radar.card.contact')}
             value={lead.contact_person}
             locked={!unlocked}
             onLockedClick={() => handleUnlock(lead)}
+            lockedHint={lockedHint}
           />
           <ContactRow
-            label="Telefon"
+            label={t('radar.card.phone')}
             value={lead.phone}
             locked={!unlocked}
             onLockedClick={() => handleUnlock(lead)}
+            lockedHint={lockedHint}
           />
           <ContactRow
-            label="E-mel"
+            label={t('radar.card.email')}
             value={lead.email}
             locked={!unlocked}
             onLockedClick={() => handleUnlock(lead)}
+            lockedHint={lockedHint}
           />
         </div>
 
-        <div className="lc-date">Dikemas kini: {fmtDate(lead.updated_at)}</div>
+        <div className="lc-date">
+          {t('radar.card.updated')}: {fmtDate(lead.updated_at, lang === 'bm' ? 'ms-MY' : 'en-GB')}
+        </div>
 
         <div className="lc-action">
           {lead.flagged ? (
-            <span className="paused">Dilapor — dijeda</span>
+            <span className="paused">{t('radar.card.flagged')}</span>
           ) : unlocked ? (
-            <span className="unlocked-pill">✓ Kontak Dibuka</span>
+            <span className="unlocked-pill">{t('radar.card.unlocked')}</span>
           ) : (
             <button
               type="button"
@@ -305,7 +321,7 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
               onClick={() => handleUnlock(lead)}
               disabled={busy === lead.id}
             >
-              {busy === lead.id ? 'Membuka…' : 'Buka Kontak (1 Token)'}
+              {busy === lead.id ? t('radar.card.unlocking') : t('radar.card.unlock')}
             </button>
           )}
         </div>
@@ -317,17 +333,15 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
     <section id="radar" className="dir-section rp-section">
       <div className="rp-head">
         <div>
-          <span className="rp-kicker">RADAR PROSPEK</span>
-          <h2 className="sec-title">Cari pembeli, pembekal &amp; pengilang</h2>
+          <span className="rp-kicker">{t('radar.kicker')}</span>
+          <h2 className="sec-title">{t('radar.title')}</h2>
           <p className="sec-sub" style={{ marginBottom: 0 }}>
-            Direktori B2B langsung untuk mineral strategik — termasuk smelter,
-            kilang pemprosesan dan refinery. Layari percuma; kontak dibuka
-            dengan 1 token.
+            {t('radar.sub')}
           </p>
         </div>
         {!user && (
           <button type="button" className="btn primary" onClick={onRequireAuth}>
-            Daftar Percuma — 10 Token
+            {t('radar.register')}
           </button>
         )}
       </div>
@@ -338,8 +352,8 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
           <div className="rp-step" key={s.n}>
             <div className="stepnum">{s.n}</div>
             <div>
-              <h3>{s.title}</h3>
-              <p>{s.text}</p>
+              <h3>{t(s.titleKey)}</h3>
+              <p>{t(s.textKey)}</p>
             </div>
           </div>
         ))}
@@ -354,29 +368,29 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
 
       {/* ---- kawalan penapis ---- */}
       <div className="rp-controls">
-        <div className="rp-tabs" role="tablist" aria-label="Kategori direktori">
-          {SIDE_TABS.map((t) => (
+        <div className="rp-tabs" role="tablist" aria-label={t('radar.filter.ariaTabs')}>
+          {SIDE_TABS.map((tab) => (
             <button
-              key={t.label}
+              key={tab.labelKey}
               type="button"
               role="tab"
-              aria-selected={side === t.key}
-              className={side === t.key ? 'rp-tab on' : 'rp-tab'}
-              onClick={() => setSide(t.key)}
+              aria-selected={side === tab.key}
+              className={side === tab.key ? 'rp-tab on' : 'rp-tab'}
+              onClick={() => setSide(tab.key)}
             >
-              <span className="rp-tab-full">{t.label}</span>
-              <span className="rp-tab-short">{t.short}</span>
+              <span className="rp-tab-full">{t(tab.labelKey)}</span>
+              <span className="rp-tab-short">{t(tab.shortKey)}</span>
             </button>
           ))}
         </div>
 
         <div className="rp-selects">
           <select
-            aria-label="Tapis mineral"
+            aria-label={t('radar.filter.ariaMineral')}
             value={mineral}
             onChange={(e) => setMineral(e.target.value)}
           >
-            <option value="">Semua mineral</option>
+            <option value="">{t('radar.filter.mineral')}</option>
             {options.minerals.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -385,11 +399,11 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
           </select>
 
           <select
-            aria-label="Tapis negara"
+            aria-label={t('radar.filter.ariaCountry')}
             value={country}
             onChange={(e) => setCountry(e.target.value)}
           >
-            <option value="">Semua negara</option>
+            <option value="">{t('radar.filter.country')}</option>
             {options.countries.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -399,22 +413,22 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
 
           <input
             type="search"
-            aria-label="Carian syarikat atau mineral"
-            placeholder="Cari syarikat, mineral, wilayah…"
+            aria-label={t('radar.filter.ariaSearch')}
+            placeholder={t('radar.filter.search')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
 
           {filtersActive && (
             <button type="button" className="rp-reset" onClick={resetFilters}>
-              Set semula
+              {t('radar.filter.reset')}
             </button>
           )}
         </div>
       </div>
 
       {/* ---- hasil ---- */}
-      {loading && <div className="leadstate">Memuatkan direktori…</div>}
+      {loading && <div className="leadstate">{t('radar.loading')}</div>}
 
       {error && (
         <div className="card" style={{ borderColor: '#F3C6C6' }}>
@@ -424,14 +438,11 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
 
       {!loading && !error && leads.length === 0 && (
         <div className="dirwrap empty-dir">
-          <div className="eb">Tiada lead sepadan</div>
-          <p>
-            Cuba longgarkan penapis, atau set semula untuk melihat seluruh
-            direktori.
-          </p>
+          <div className="eb">{t('radar.empty.title')}</div>
+          <p>{t('radar.empty.text')}</p>
           {filtersActive && (
             <button type="button" className="btn primary" onClick={resetFilters}>
-              Set semula penapis
+              {t('radar.empty.reset')}
             </button>
           )}
         </div>
@@ -440,14 +451,10 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
       {!loading && !error && leads.length > 0 && (
         <>
           <div className="rp-count">
-            {leads.length} lead dipaparkan
-            {filtersActive ? ' (ditapis)' : ''}
+            {t(filtersActive ? 'radar.countFiltered' : 'radar.count', { n: leads.length })}
           </div>
           <div className="leadgrid">{leads.map(renderCard)}</div>
-          <p className="rp-foot">
-            Kontak disaring di lapisan database dan hanya terbuka selepas tukar
-            1 token. Lead tidak tepat boleh dilapor untuk bayaran balik token.
-          </p>
+          <p className="rp-foot">{t('radar.foot')}</p>
         </>
       )}
     </section>

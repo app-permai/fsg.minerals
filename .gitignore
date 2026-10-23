@@ -21,3 +21,6 @@ npm-debug.log*
 # Qoder/IDE
 .qoder/
 supabase/.temp
+
+# test harness (recreated on demand, see AGENTS.md section 11)
+.tmp-test/
