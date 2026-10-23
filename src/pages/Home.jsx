@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Header from '../components/Header'
 import Hero from '../components/Hero'
-import DirectoryTeaser from '../components/DirectoryTeaser'
+import RadarProspek from '../components/RadarProspek'
 import HowItWorks from '../components/HowItWorks'
 import MineralsGrid from '../components/MineralsGrid'
 import Footer from '../components/Footer'
@@ -16,7 +16,7 @@ import RequestQuoteModal from '../components/RequestQuoteModal'
  * Susun atur:
  *  Header          header asal + ticker + Log In / Register + lencana token
  *  Hero            hero asal + panel Terminal Status + 4 kad metrik + CTA token
- *  DirectoryTeaser direktori lead disaring (RPC unlock_lead)
+ *  RadarProspek    direktori pembeli/pembekal boleh ditapis (RPC unlock_lead)
  *  HowItWorks      4 langkah token
  *  MineralsGrid    grid "Mineral Fokus FSG" asal
  *  CaraBerurusan   3 kad asal (Enquiry / Assay / Sebutharga)
@@ -69,7 +69,15 @@ export default function Home() {
       />
       <div className="container">
         <Hero onRegister={openRegister} />
-        <DirectoryTeaser onRequireAuth={openRegister} onTopUp={() => setTopUp(true)} />
+        {/* Bahagian B2B Marketplace — Radar Prospek.
+            id="marketplace" dikekalkan supaya pautan sedia ada
+            (Hero -> #marketplace) masih berfungsi. */}
+        <div id="marketplace">
+          <RadarProspek
+            onRequireAuth={openRegister}
+            onTopUp={() => setTopUp(true)}
+          />
+        </div>
         <HowItWorks onRegister={openRegister} onTopUp={() => setTopUp(true)} />
         <MineralsGrid />
         <CaraBerurusan />

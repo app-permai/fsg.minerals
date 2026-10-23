@@ -7,9 +7,9 @@ import { MINERALS } from './minerals'
 /**
  * Header — susun atur asal laman korporat:
  * logo bumi + nama syarikat + no. SSM + lencana "Global Minerals
- * Supply Chain", menu (Home / Minerals / Market Tool / Contact),
- * butang "Minta Sebutharga" (hijau), toggle Cerah/Gelap, dan ticker
- * harga hijau.
+ * Supply Chain", menu (Home / Radar Prospek / Minerals / Market
+ * Tool / Contact), butang "Minta Sebutharga" (hijau), toggle
+ * Cerah/Gelap, dan ticker harga hijau.
  *
  * Integrasi backend tanpa mengubah rupa:
  *  - Tetamu: butang "Log Masuk / Daftar" (modal korporat putih/hijau).
@@ -70,6 +70,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
 
         <nav className="menu" aria-label="Menu utama">
           <a href="/" className="active">Home</a>
+          <a href="#marketplace">Radar Prospek</a>
           <a href="/minerals.html">Minerals</a>
           <a href="/market-tool.html">Market Tool</a>
           <a href="/contact.html">Contact</a>
