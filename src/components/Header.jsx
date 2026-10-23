@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { MINERALS } from './minerals'
+import { useMarketRates, priceIn } from '../lib/marketRates'
 
 /**
  * Header — susun atur korporat:
@@ -35,8 +36,24 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   const [theme, setTheme] = useState(readTheme)
   const [menuOpen, setMenuOpen] = useState(false)
 
+  /* Harga pasaran langsung — melalui Edge Function + cache DB. */
+  const { data: market } = useMarketRates({ pollMs: 5 * 60 * 1000 })
+
+  const byId = new Map(market.rates.map((r) => [r.id, r]))
   const tickerText =
-    MINERALS.map((m) => `⭐ ${m.bm}: ${m.price}`).join(' • ') + ' • '
+    MINERALS.map((m) => {
+      const live = byId.get(m.rateId)
+      if (live?.isLive) {
+        const v = priceIn(live.usdPerKg, m.unit)
+        const dp = m.unit === 'oz' ? 2 : 0
+        const s = v.toLocaleString('en-US', {
+          minimumFractionDigits: dp,
+          maximumFractionDigits: dp,
+        })
+        return `⭐ ${m.bm}: $${s}`
+      }
+      return `⭐ ${m.bm}: ${m.price}`
+    }).join(' • ') + ' • '
 
   /* Tutup panel apabila viewport melebar melepasi breakpoint mudah alih. */
   useEffect(() => {

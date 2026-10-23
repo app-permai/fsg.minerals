@@ -41,6 +41,8 @@ All tables live in `public` and have RLS enabled.
 | `lead_reports` | "Inaccurate lead" reports; drives refunds and auto-flagging | 2 (read own, admin read) |
 | `fsg_quotes` | Quote requests from the Request Quote modal | 0 — service-role only |
 | `fsg_invoices` | Invoices generated from quotes | 0 — service-role only |
+| `market_rates` | Live metals prices cache (per mineral) | 1 (public read) |
+| `fx_rates` | USD/MYR cache | 1 (public read) |
 
 **Important column notes**
 
@@ -199,12 +201,13 @@ balanced — do not add them back to the nav.
 
 ---
 
-## 6. Edge functions
+## 6. Edge functions & live market data
 
 | Slug | verify_jwt | Status |
 |---|---|---|
 | `create-quote` | `false` | ACTIVE |
 | `admin-api` | `false` | ACTIVE |
+| `market-rates` | `false` | ACTIVE — live metals + FX |
 | `create-chip-payment` | — | in repo, not deployed |
 | `chip-webhook` | — | **in repo, deliberately NOT deployed** |
 
@@ -212,6 +215,53 @@ balanced — do not add them back to the nav.
 would let anyone who knows the URL POST a forged `topup:<uuid>:pro` reference
 and receive free tokens via service_role `add_tokens`. Do not deploy it until
 HMAC verification is implemented.
+
+### 6a. Live market data (`market-rates`)
+
+`GET/POST /functions/v1/market-rates` returns metals prices + USD/MYR.
+It exists because **Yahoo Finance sends no CORS headers**, so the browser
+cannot call it directly.
+
+**Provider coverage — 4 of 9 minerals, and that is deliberate.**
+
+| Mineral | Symbol | Exchange | Live? |
+|---|---|---|---|
+| AURUM | `GC=F` | COMEX | ✅ |
+| SILVER | `SI=F` | COMEX | ✅ |
+| COPPER | `HG=F` | COMEX (USD/lb) | ✅ |
+| ALUMINIUM | `ALI=F` | COMEX | ✅ |
+| TIN | — | LME (paid) | ❌ reference |
+| TITANIUM | — | Fastmarkets (paid) | ❌ reference |
+| LITHIUM | — | Fastmarkets (paid) | ❌ reference |
+| COLTAN | — | OTC trader quotes | ❌ reference |
+| TANTALUM | — | OTC trader quotes | ❌ reference |
+
+Tin, Titanium, Lithium, Coltan and Tantalum have **no free public feed**.
+They are returned with `is_live: false` and the UI labels them "Rujukan".
+Do not fabricate live numbers for them — that is a false claim on a page
+that says "LIVE API ACTIVE".
+
+**Unit conversion** (provider quote → USD/kg):
+`oz ÷ 0.0311034768` · `lb × 2.2046226218` · `tonne ÷ 1000`
+
+**Caching:** the function writes to `public.market_rates` and
+`public.fx_rates` and returns the cache when it is younger than 15 minutes.
+One upstream fetch serves every visitor.
+
+**Client:** `src/lib/marketRates.js` — `useMarketRates({ pollMs })`.
+Fallback chain: Edge Function → `get_market_rates()` RPC → static
+`FALLBACK_RATES` in the bundle. The page never breaks; the badge and
+footer disclaimer state honestly which layer is in use.
+
+**No API keys are required** (Yahoo + open.er-api.com are free and keyless).
+If a paid provider is added later, put the key in Supabase secrets — never in
+the client bundle. A secret scan of the built bundle is part of the checklist.
+
+**Tables:** `market_rates` (per mineral) and `fx_rates` (per pair). Both are
+publicly readable (market prices are not secret) but **write-restricted to
+service_role** — there is no INSERT/UPDATE policy, so a client cannot forge a
+price. Seed rows use `source='static'`, `is_live=false` so the page renders
+before the function is ever called.
 
 ---
 
@@ -265,6 +315,8 @@ Applied in order via the Supabase Management API
 05_radar_prospek.sql           get_radar_stats, get_radar_listings
 06_radar_demo_seed.sql         12 demo listings (buy + sell)
 07_radar_processing_plants.sql side += 'process', processor_count, 5 demo plants
+08_market_rates.sql            market_rates + fx_rates cache tables
+09_market_rates_provider.sql   provider metadata, get_market_rates() RPC
 ```
 
 **Demo data cleanup:**
