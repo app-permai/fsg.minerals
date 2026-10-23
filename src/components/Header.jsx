@@ -1,23 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { MINERALS } from './minerals'
 
 /**
- * Header — susun atur asal laman korporat:
+ * Header — susun atur korporat:
  * logo bumi + nama syarikat + no. SSM + lencana "Global Minerals
- * Supply Chain", menu (Home / Radar Prospek / Minerals / Market
- * Tool / Contact), butang "Minta Sebutharga" (hijau), toggle
- * Cerah/Gelap, dan ticker harga hijau.
+ * Supply Chain", nav utama (Home / Radar Prospek / Market Tool /
+ * Contact), tindakan sekunder (Log Masuk / Daftar, lencana token,
+ * Minta Sebutharga), toggle Cerah/Gelap, dan ticker harga hijau.
  *
- * Integrasi backend tanpa mengubah rupa:
- *  - Tetamu: butang "Log Masuk / Daftar" (modal korporat putih/hijau).
- *  - Log masuk: lencana token EMAS (🪙 N Tokens) bersebelahan
- *    "Minta Sebutharga" — klik untuk top-up CHIP.
- *  - Toggle tema: lalai CERAH (putih korporat). Pilihan gelap
- *    menggunakan hijau hutan #0A1410, bukan biru navy SaaS.
+ * Pautan korporat kurang kritikal (Minerals, Corporate) dipindahkan
+ * ke Footer supaya header kekal seimbang.
+ *
+ * Mudah alih (<768px): nav utama + tindakan sekunder dikumpul ke
+ * dalam panel hamburger. Ticker kekal satu baris dan menatal.
  */
+const PRIMARY_NAV = [
+  { href: '/', label: 'Home' },
+  { href: '#marketplace', label: 'Radar Prospek' },
+  { href: '/market-tool.html', label: 'Market Tool' },
+  { href: '/contact.html', label: 'Contact' },
+]
+
 function readTheme() {
   if (typeof document === 'undefined') return 'light'
   return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
@@ -27,11 +33,22 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
   const { user, tokenBalance } = useAuth()
   const toast = useToast()
   const [theme, setTheme] = useState(readTheme)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const tickerText =
     MINERALS.map((m) => `⭐ ${m.bm}: ${m.price}`).join(' • ') + ' • '
 
+  /* Tutup panel apabila viewport melebar melepasi breakpoint mudah alih. */
+  useEffect(() => {
+    if (!menuOpen) return
+    const mq = window.matchMedia('(min-width: 768px)')
+    const close = () => setMenuOpen(false)
+    mq.addEventListener('change', close)
+    return () => mq.removeEventListener('change', close)
+  }, [menuOpen])
+
   async function handleSignOut() {
+    setMenuOpen(false)
     await supabase.auth.signOut()
     toast.info('Anda telah log keluar.')
   }
@@ -46,7 +63,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
       /* mod peribadi */
     }
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', next === 'dark' ? '#0A1410' : '#FFFFFF')
+    if (meta) meta.setAttribute('content', next === 'dark' ? '#0A1410' : '#F6F7F6')
   }
 
   const dark = theme === 'dark'
@@ -68,78 +85,121 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
           </span>
         </a>
 
-        <nav className="menu" aria-label="Menu utama">
-          <a href="/" className="active">Home</a>
-          <a href="#marketplace">Radar Prospek</a>
-          <a href="/minerals.html">Minerals</a>
-          <a href="/market-tool.html">Market Tool</a>
-          <a href="/contact.html">Contact</a>
+        <button
+          type="button"
+          className="navtoggle"
+          aria-expanded={menuOpen}
+          aria-controls="primary-nav"
+          aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span className="bars" aria-hidden="true">
+            <i /><i /><i />
+          </span>
+        </button>
 
-          {user ? (
-            <>
-              {/* Lencana token emas — baki langsung dari profiles.token_balance */}
+        <nav
+          id="primary-nav"
+          className={menuOpen ? 'menu open' : 'menu'}
+          aria-label="Menu utama"
+        >
+          <div className="menu-links">
+            {PRIMARY_NAV.map((n) => (
+              <a
+                key={n.href}
+                href={n.href}
+                className={n.href === '/' ? 'active' : undefined}
+                onClick={() => setMenuOpen(false)}
+              >
+                {n.label}
+              </a>
+            ))}
+          </div>
+
+          <div className="menu-actions">
+            {user ? (
+              <>
+                {/* Lencana token emas — baki langsung dari profiles.token_balance */}
+                <button
+                  type="button"
+                  className="tokbadge"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onTopUp()
+                  }}
+                  title="Baki token — klik untuk top-up CHIP"
+                >
+                  🪙 {tokenBalance ?? '—'} Tokens
+                </button>
+                <button type="button" onClick={handleSignOut} title={user.email}>
+                  Log Keluar
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                className="tokbadge"
-                onClick={onTopUp}
-                title="Baki token — klik untuk top-up CHIP"
+                className="authbtn"
+                onClick={() => {
+                  setMenuOpen(false)
+                  onLogin()
+                }}
               >
-                🪙 {tokenBalance ?? '—'} Tokens
+                Log Masuk / Daftar
               </button>
-              <button type="button" onClick={handleSignOut} title={user.email}>
-                Log Keluar
-              </button>
-            </>
-          ) : (
-            <button type="button" className="authbtn" onClick={onLogin}>
-              Log Masuk / Daftar
+            )}
+
+            {/* Toggle Cerah/Gelap asal — lalai cerah */}
+            <button
+              type="button"
+              className="theme-toggle"
+              data-theme-toggle
+              onClick={toggleTheme}
+              aria-pressed={dark}
+              aria-label={dark ? 'Tukar ke mod cerah' : 'Tukar ke mod gelap'}
+              title={dark ? 'Tukar ke mod cerah' : 'Tukar ke mod gelap'}
+            >
+              <svg
+                className="i-moon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+              </svg>
+              <svg
+                className="i-sun"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              </svg>
+              <span className="tt-label">
+                <span className="tt-dark">Gelap</span>
+                <span className="tt-light">Cerah</span>
+              </span>
             </button>
-          )}
 
-          {/* Toggle Cerah/Gelap asal — lalai cerah */}
-          <button
-            type="button"
-            className="theme-toggle"
-            data-theme-toggle
-            onClick={toggleTheme}
-            aria-pressed={dark}
-            aria-label={dark ? 'Tukar ke mod cerah' : 'Tukar ke mod gelap'}
-            title={dark ? 'Tukar ke mod cerah' : 'Tukar ke mod gelap'}
-          >
-            <svg
-              className="i-moon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                setMenuOpen(false)
+                onRequestQuote()
+              }}
             >
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
-            </svg>
-            <svg
-              className="i-sun"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-            </svg>
-            <span className="tt-label">
-              <span className="tt-dark">Gelap</span>
-              <span className="tt-light">Cerah</span>
-            </span>
-          </button>
-
-          <button type="button" className="btn primary" onClick={onRequestQuote}>
-            Minta Sebutharga
-          </button>
+              Minta Sebutharga
+            </button>
+          </div>
         </nav>
       </div>
 

@@ -34,7 +34,7 @@ All tables live in `public` and have RLS enabled.
 | Table | Purpose | RLS policies |
 |---|---|---|
 | `profiles` | One row per auth user; holds `token_balance` | 3 (read own, update own, admin read) |
-| `listings` | Buyer/seller directory entries | 2 (seller manage own, admin full) |
+| `listings` | Buyer/seller/processor directory entries | 2 (seller manage own, admin full) |
 | `unlocked_leads` | Proof a user paid 1 token for a lead's contacts | 2 (read own, admin read) |
 | `unlocked_docs` | Proof a user paid for a COA document | 2 (read own, admin read) |
 | `token_transactions` | Immutable ledger of every token movement | 2 (read own, admin read) |
@@ -47,8 +47,11 @@ All tables live in `public` and have RLS enabled.
 - `fsg_quotes` has **`number`**, not `quote_number`. `quote_number` lives on
   `fsg_invoices`. Do not write `quote_number` against `fsg_quotes`.
 - `listings` uses `mineral_type`, `quantity_available`, `price_indication`,
-  `exact_mine_address`, `side` (`'buy'` | `'sell'`), `incoterms`, `verified`,
-  `flagged`, `coa_document_url`, `status` (`'active'` by default).
+  `exact_mine_address`, `side`, `incoterms`, `verified`, `flagged`,
+  `coa_document_url`, `status` (`'active'` by default).
+- `side` is constrained by `listings_side_check` to **`'buy' | 'sell' | 'process'`**.
+  `'process'` means a processing plant / smelter / refinery and was added by
+  migration 07 — widening this constraint is required before inserting one.
 - `profiles` has **no email column** — join `auth.users` on `id` when email is
   needed.
 - `unlocked_leads` and `unlocked_docs` deliberately have **no INSERT policy**:
@@ -67,7 +70,7 @@ All tables live in `public` and have RLS enabled.
 |---|---|---|
 | `get_public_listings(p_limit, p_offset)` | anon, authenticated | Masked directory, legacy shape |
 | `get_radar_listings(p_side, p_mineral, p_country, p_search, p_limit, p_offset)` | anon, authenticated | Masked, filterable |
-| `get_radar_stats()` | anon, authenticated | Aggregates only, no rows |
+| `get_radar_stats()` | anon, authenticated | Aggregates only, no rows. Returns `buyer_count`, `seller_count`, `processor_count` |
 | `unlock_lead(p_lead_id)` | authenticated only | Charges 1 token |
 | `unlock_coa_document(p_lead_id)` | authenticated only | Charges 1 token |
 | `submit_lead_report(...)` | authenticated only | Requires prior unlock |
@@ -97,6 +100,13 @@ is also revoked from `authenticated`.
 Prospek directory and its metrics for free. Company, contact person, phone,
 email and mine address render as `████████ Co. Ltd` / `••••••••`.
 
+**Rule A2 — Three categories.** The directory is filterable by
+`side = 'buy' | 'sell' | 'process'`, surfaced as the tabs **Cari Pembeli**,
+**Cari Pembekal**, **Cari Pengilang Pemprosesan** (smelters, refineries,
+processing plants) and **Semua**. `'process'` rows carry a gold
+`PEMPROSESAN` badge (`.sidebadge.process`). `get_radar_listings` filters
+`p_side` generically, so no per-category SQL is needed.
+
 **Rule B — Registration grants 10 tokens.** Clicking any masked contact field
 or unlock button while logged out opens `SignUpModal`. Registration credits 10
 tokens automatically via the DB trigger above. The header shows a gold
@@ -118,10 +128,13 @@ src/
                              MineralsGrid, CaraBerurusan, Footer + modals
   pages/PublicListings.jsx   Standalone listing page (LeadCard grid)
   components/
-    RadarProspek.jsx         ⭐ Buyer/supplier radar: 3-step strip,
-                             5 metric cards, side tabs, mineral/country
-                             filters, debounced search, masked contact rows
-    Header.jsx               Nav, theme toggle, token badge, quote button
+    RadarProspek.jsx         ⭐ Buyer/supplier/processor radar: 3-step
+                             strip, 6 metric cards, category tabs, mineral/
+                             country filters, debounced search, masked
+                             contact rows
+    Header.jsx               Nav (Home / Radar Prospek / Market Tool /
+                             Contact), mobile hamburger, theme toggle,
+                             token badge, quote button
     Hero.jsx                 Corporate hero + 4 stat cards
     RequestQuoteModal.jsx    Calls create-quote edge function
     SignUpModal.jsx          Register/Login tabs
@@ -140,9 +153,23 @@ src/
                              light (emerald/white) + dark (forest green) themes
 ```
 
-**Theme:** Emerald green `#0E7A52` on white, Playfair Display headings +
-Manrope body. Dark mode is forest green `#0A1410`, never navy. Toggle writes
-`data-theme` on `<html>` and persists to `localStorage['fsg-theme']`.
+**Theme:** Emerald green `#0E7A52` on a soft warm-grey page background
+`#F6F7F6` (deliberately NOT pure white — reduces glare), Playfair Display
+headings + Manrope body. Cards use `border-radius:12px` and
+`box-shadow:0 2px 8px rgba(0,0,0,.04)`. Dark mode is forest green `#0A1410`,
+never navy. Toggle writes `data-theme` on `<html>` and persists to
+`localStorage['fsg-theme']`.
+
+**Responsive:** breakpoint is `<768px`. Below it the header collapses to a
+hamburger (`.navtoggle` + `.menu.open`), the directory grid drops to one
+column, filter selects stack full-width with 44px tap targets, category tabs
+swap long labels for `.rp-tab-short`, and the ticker is clamped to `100vw`.
+The directory grid is `repeat(auto-fit, minmax(300px, 1fr))` — 1 / 2 / 3
+columns emerge from container width, no per-breakpoint overrides.
+
+**Header vs Footer:** the header carries only Home / Radar Prospek / Market
+Tool / Contact. Minerals and Corporate live in the Footer to keep the header
+balanced — do not add them back to the nav.
 
 **Removed:** `DirectoryTeaser.jsx` was deleted and replaced by
 `RadarProspek.jsx`. Do not reintroduce it.
@@ -213,12 +240,14 @@ Applied in order via the Supabase Management API
 03_rls_and_storage_policies.sql RLS policies, column privileges
 04_marketplace_homepage.sql    get_public_listings v2, 10-token trigger
 05_radar_prospek.sql           get_radar_stats, get_radar_listings
-06_radar_demo_seed.sql         12 demo listings (remove before real launch)
+06_radar_demo_seed.sql         12 demo listings (buy + sell)
+07_radar_processing_plants.sql side += 'process', processor_count, 5 demo plants
 ```
 
 **Demo data cleanup:**
 ```sql
-delete from public.listings where id::text like 'a1000000-0000-4000-8000-%';
+delete from public.listings where id::text like 'a1000000-0000-4000-8000-%';  -- buy/sell
+delete from public.listings where id::text like 'a2000000-0000-4000-8000-%';  -- process
 ```
 
 ---
@@ -230,7 +259,7 @@ delete from public.listings where id::text like 'a1000000-0000-4000-8000-%';
 3. `fsg_quote_nextval` / `fsg_invoice_nextval` are callable by `anon`
    (sequence burn).
 4. `mailer_autoconfirm: true` with no SMTP — see §8.
-5. 12 demo listings sit in the production database.
+5. 17 demo listings sit in the production database (12 buy/sell + 5 process).
 6. `dbAllowedCidrs: 0.0.0.0/0` and `pitr_enabled: false` — no physical backup.
 
 ---
