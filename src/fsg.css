@@ -425,3 +425,23 @@ html[data-theme="dark"] .rp-tab.on{box-shadow:none}
 html[data-theme="dark"] .menu.open{background:var(--card);border-color:var(--line)}
 html[data-theme="dark"] .navtoggle{background:var(--card);border-color:var(--line);color:var(--ink)}
 html[data-theme="dark"] .sidebadge.process{background:rgba(242,217,139,.12);color:#F2D98B;border-color:rgba(242,217,139,.3)}
+
+/* ============================================================
+   LENCANA HARGA PASARAN (live / rujukan)
+   ============================================================ */
+.livebadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;
+  letter-spacing:.04em;padding:5px 12px;border-radius:999px;white-space:nowrap}
+.livebadge.live{background:rgba(220,38,38,.16);border:1px solid rgba(255,120,120,.45);color:#FFC9C9}
+.livebadge.manual{background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.4);color:#FDE68A}
+.livebadge.loading{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#D8E6DE}
+
+.livepill{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.06em;
+  padding:2px 8px;border-radius:999px;background:rgba(14,122,82,.12);color:var(--brand);
+  border:1px solid rgba(14,122,82,.28);vertical-align:middle}
+.refpill{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.06em;
+  padding:2px 8px;border-radius:999px;background:rgba(138,107,20,.12);color:#8A6B14;
+  border:1px solid rgba(138,107,20,.28);vertical-align:middle}
+.provnote{font-size:10.5px;color:var(--muted);margin:0;font-style:italic}
+
+html[data-theme="dark"] .livepill{background:rgba(76,195,138,.14);border-color:rgba(76,195,138,.3);color:#6FDCA1}
+html[data-theme="dark"] .refpill{background:rgba(242,217,139,.12);border-color:rgba(242,217,139,.3);color:#F2D98B}

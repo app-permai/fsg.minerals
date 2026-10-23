@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import { useMarketRates, statusBadge } from '../lib/marketRates'
 
 /**
  * Hero — susun atur & teks asal laman korporat:
@@ -11,6 +12,11 @@ import { useAuth } from '../context/AuthContext'
  */
 export default function Hero({ onRegister }) {
   const { user } = useAuth()
+  const market = useMarketRates({ pollMs: 5 * 60 * 1000 })
+  const badge = statusBadge(market)
+  const stamp = market.data.updatedAt
+    ? new Date(market.data.updatedAt).toLocaleString('ms-MY')
+    : null
 
   return (
     <div className="container">
@@ -52,10 +58,15 @@ export default function Hero({ onRegister }) {
         </div>
 
         <div className="panel">
-          <h3>Terminal Status — Aktif</h3>
+          <h3>Terminal Status — {market.data.live ? 'Aktif' : 'Rujukan'}</h3>
           <p>
-            Kadar USD-MYR 4.70 • Kemaskini 21/10/2026 • Harga rujukan sahaja,
-            tertakluk pengesahan FSG.
+            <span className={`livebadge ${badge.tone}`}>{badge.text}</span>
+          </p>
+          <p>
+            Kadar USD-MYR {market.data.usdMyr.toFixed(4)}
+            {market.data.fxLive ? ' (live)' : ' (rujukan)'} •{' '}
+            {stamp ? `Kemaskini ${stamp}` : 'Belum disegerakkan'} •{' '}
+            {badge.detail || 'Harga tertakluk pengesahan FSG.'}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <a className="btn" style={{ background: '#fff' }} href="/market-tool.html#harga">Harga Live</a>
