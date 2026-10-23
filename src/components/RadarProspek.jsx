@@ -4,10 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 
 /**
- * RadarProspek — modul carian pembeli / pembekal ("Radar Prospek").
+ * RadarProspek — modul carian pembeli / pembekal / pengilang ("Radar Prospek").
  *
  * Tiga langkah yang dipaparkan kepada pelawat:
- *   1. Cari syarikat   — direktori boleh ditapis (sisi, mineral, negara, carian)
+ *   1. Cari syarikat   — direktori boleh ditapis (kategori, mineral, negara, carian)
  *   2. Tarik kontak    — 1 token membuka nama syarikat, kontak, telefon,
  *                        e-mel dan alamat lombong
  *   3. Database        — metrik langsung: bilangan pembeli, negara, komoditi
@@ -25,16 +25,24 @@ import { useToast } from './Toast'
 const MASKED = '••••••••'
 
 const SIDE_TABS = [
-  { key: 'buy', label: 'Cari Pembeli', hint: 'Permintaan aktif' },
-  { key: 'sell', label: 'Cari Pembekal', hint: 'Bekalan tersedia' },
-  { key: null, label: 'Semua', hint: 'Pembeli & pembekal' },
+  { key: 'buy', label: 'Cari Pembeli', short: 'Pembeli' },
+  { key: 'sell', label: 'Cari Pembekal', short: 'Pembekal' },
+  { key: 'process', label: 'Cari Pengilang Pemprosesan', short: 'Pemprosesan' },
+  { key: null, label: 'Semua', short: 'Semua' },
 ]
+
+/** Label + kelas lencana bagi setiap kategori direktori. */
+const SIDE_BADGE = {
+  buy: { label: 'Pembeli', cls: 'buy' },
+  sell: { label: 'Pembekal', cls: 'sell' },
+  process: { label: 'PEMPROSESAN', cls: 'process' },
+}
 
 const STEPS = [
   {
     n: '1',
     title: 'Cari syarikat',
-    text: 'Tapis mengikut sisi, mineral dan negara. Semua kad boleh dilihat percuma.',
+    text: 'Tapis mengikut kategori, mineral dan negara. Semua kad boleh dilihat percuma.',
   },
   {
     n: '2',
@@ -58,12 +66,8 @@ function fmtDate(iso) {
 }
 
 function SideTag({ side }) {
-  const buy = side === 'buy'
-  return (
-    <span className={buy ? 'sidebadge buy' : 'sidebadge sell'}>
-      {buy ? 'Pembeli' : 'Pembekal'}
-    </span>
-  )
+  const b = SIDE_BADGE[side] || { label: side || '—', cls: 'sell' }
+  return <span className={`sidebadge ${b.cls}`}>{b.label}</span>
 }
 
 /** Satu medan kontak; bertopeng = boleh diklik untuk membuka daftar. */
@@ -221,9 +225,10 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
   const metricCards = useMemo(() => {
     const s = stats || {}
     return [
-      { value: s.total_leads, label: 'LEAD AKTIF', sub: 'pembeli + pembekal' },
+      { value: s.total_leads, label: 'LEAD AKTIF', sub: 'semua kategori' },
       { value: s.buyer_count, label: 'PEMBELI', sub: 'permintaan aktif' },
       { value: s.seller_count, label: 'PEMBEKAL', sub: 'bekalan tersedia' },
+      { value: s.processor_count, label: 'PEMPROSESAN', sub: 'smelter / refinery' },
       { value: s.country_count, label: 'NEGARA', sub: 'liputan sumber' },
       { value: s.commodity_count, label: 'KOMODITI', sub: 'jenis mineral' },
     ]
@@ -313,10 +318,11 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
       <div className="rp-head">
         <div>
           <span className="rp-kicker">RADAR PROSPEK</span>
-          <h2 className="sec-title">Cari pembeli &amp; pembekal</h2>
+          <h2 className="sec-title">Cari pembeli, pembekal &amp; pengilang</h2>
           <p className="sec-sub" style={{ marginBottom: 0 }}>
-            Direktori B2B langsung untuk mineral strategik. Layari percuma —
-            kontak dibuka dengan 1 token.
+            Direktori B2B langsung untuk mineral strategik — termasuk smelter,
+            kilang pemprosesan dan refinery. Layari percuma; kontak dibuka
+            dengan 1 token.
           </p>
         </div>
         {!user && (
@@ -348,7 +354,7 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
 
       {/* ---- kawalan penapis ---- */}
       <div className="rp-controls">
-        <div className="rp-tabs" role="tablist" aria-label="Sisi direktori">
+        <div className="rp-tabs" role="tablist" aria-label="Kategori direktori">
           {SIDE_TABS.map((t) => (
             <button
               key={t.label}
@@ -358,7 +364,8 @@ export default function RadarProspek({ onRequireAuth, onTopUp }) {
               className={side === t.key ? 'rp-tab on' : 'rp-tab'}
               onClick={() => setSide(t.key)}
             >
-              {t.label}
+              <span className="rp-tab-full">{t.label}</span>
+              <span className="rp-tab-short">{t.short}</span>
             </button>
           ))}
         </div>
