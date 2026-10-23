@@ -198,6 +198,7 @@ export const DICT = {
     'footer.stamp': '(kemas kini terakhir {stamp})',
     'footer.contact': 'Hubungi',
     'footer.links': 'Pautan footer',
+    'footer.developed_by': 'Dibangunkan oleh',
 
     /* ---------- Modals ---------- */
     'auth.registerTitle': 'Cipta akaun percuma anda',
@@ -426,6 +427,7 @@ export const DICT = {
     'footer.stamp': '(last updated {stamp})',
     'footer.contact': 'Contact',
     'footer.links': 'Footer links',
+    'footer.developed_by': 'Developed by',
 
     /* ---------- Modals ---------- */
     'auth.registerTitle': 'Create your free account',

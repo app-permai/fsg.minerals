@@ -107,6 +107,9 @@
       /* footer */
       'foot.disclaimer': 'Penafian:',
       'foot.contact': 'Hubungi',
+      /* Awalan 'footer.' (bukan 'foot.') — kunci SAMA dengan SPA React,
+         supaya satu istilah dipakai merentas kedua-dua runtime. */
+      'footer.developed_by': 'Dibangunkan oleh',
 
       /* status lencana harga */
       'status.live': '🔴 API LANGSUNG AKTIF',
@@ -196,6 +199,7 @@
       /* footer */
       'foot.disclaimer': 'Disclaimer:',
       'foot.contact': 'Contact',
+      'footer.developed_by': 'Developed by',
 
       /* status lencana harga */
       'status.live': '🔴 LIVE API ACTIVE',
