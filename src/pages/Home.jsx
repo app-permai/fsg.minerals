@@ -7,6 +7,7 @@ import MineralsGrid from '../components/MineralsGrid'
 import Footer from '../components/Footer'
 import SignUpModal from '../components/SignUpModal'
 import TopUpModal from '../components/TopUpModal'
+import RequestQuoteModal from '../components/RequestQuoteModal'
 
 /**
  * Home — laman utama marketplace B2B dalam reka bentuk korporat
@@ -54,13 +55,18 @@ function CaraBerurusan() {
 export default function Home() {
   const [signUp, setSignUp] = useState({ open: false, mode: 'register' })
   const [topUp, setTopUp] = useState(false)
+  const [quote, setQuote] = useState(false)
 
   const openRegister = () => setSignUp({ open: true, mode: 'register' })
   const openLogin = () => setSignUp({ open: true, mode: 'login' })
 
   return (
     <>
-      <Header onLogin={openLogin} onTopUp={() => setTopUp(true)} />
+      <Header
+        onLogin={openLogin}
+        onTopUp={() => setTopUp(true)}
+        onRequestQuote={() => setQuote(true)}
+      />
       <div className="container">
         <Hero onRegister={openRegister} />
         <DirectoryTeaser onRequireAuth={openRegister} onTopUp={() => setTopUp(true)} />
@@ -77,6 +83,7 @@ export default function Home() {
         onClose={() => setSignUp({ open: false, mode: signUp.mode })}
       />
       <TopUpModal open={topUp} onClose={() => setTopUp(false)} />
+      <RequestQuoteModal open={quote} onClose={() => setQuote(false)} />
     </>
   )
 }
