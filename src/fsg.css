@@ -9,23 +9,43 @@
    ============================================================ */
 
 :root{
-  --bg:#F6F7F6; --bg2:#EFF3F1; --card:#FFFFFF;
+  --bg:#F4F6F5; --bg2:#EDF1EF; --card:#FFFFFF;
   --brand:#0E7A52; --brand-deep:#0B2E21; --brand2:#2FA968;
   --ink:#1B2420; --muted:#5D7067; --line:#DDE5E1;
   --gold-bg:#FBF3DC; --gold-line:#E5CE8C; --gold-ink:#8A6B14;
   --shadow:0 2px 8px rgba(0,0,0,.04);
   --shadow-lift:0 6px 18px rgba(0,0,0,.06);
   --r:12px;
+
+  /* Pola poligon geometri (SVG data-URI, jubin 720px, ~1.2 KB).
+     Dijana sebagai segi tiga berselang-seli dua keamatan supaya
+     corak kekal halus dan tidak mengganggu bacaan. */
+  --poly:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27720%27%20height%3D%27720%27%20viewBox%3D%270%200%20720%20720%27%3E%3Cg%20fill%3D%27%230E7A52%27%3E%3Cpath%20fill-opacity%3D%27.055%27%20d%3D%27M0%200L180%200L180%20180ZM180%200L360%200L180%20180ZM360%200L540%200L540%20180ZM540%200L720%200L540%20180ZM0%20180L180%20180L0%20360ZM180%20180L360%20180L360%20360ZM360%20180L540%20180L360%20360ZM540%20180L720%20180L720%20360ZM0%20360L180%20360L180%20540ZM180%20360L360%20360L180%20540ZM360%20360L540%20360L540%20540ZM540%20360L720%20360L540%20540ZM0%20540L180%20540L0%20720ZM180%20540L360%20540L360%20720ZM360%20540L540%20540L360%20720ZM540%20540L720%20540L720%20720Z%27%2F%3E%3Cpath%20fill-opacity%3D%27.028%27%20d%3D%27M0%200L180%20180L0%20180ZM360%200L360%20180L180%20180ZM360%200L540%20180L360%20180ZM720%200L720%20180L540%20180ZM180%20180L180%20360L0%20360ZM180%20180L360%20360L180%20360ZM540%20180L540%20360L360%20360ZM540%20180L720%20360L540%20360ZM0%20360L180%20540L0%20540ZM360%20360L360%20540L180%20540ZM360%20360L540%20540L360%20540ZM720%20360L720%20540L540%20540ZM180%20540L180%20720L0%20720ZM180%20540L360%20720L180%20720ZM540%20540L540%20720L360%20720ZM540%20540L720%20720L540%20720Z%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  /* Selubung gradien lembut di ATAS corak — inilah yang menurunkan
+     silau. Lapisan pertama dalam background-image = lapisan teratas. */
+  --poly-veil:linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(235,240,237,.35) 100%);
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+html{background-color:var(--bg)}
+body{
+  margin:0;font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);line-height:1.65;
+  background-color:var(--bg);
+  /* Lapisan atas: selubung gradien. Lapisan bawah: poligon berulang. */
+  background-image:var(--poly-veil), var(--poly);
+  background-repeat:no-repeat, repeat;
+  background-size:cover, 720px 720px;
+  background-position:center center, center top;
+  background-attachment:fixed, fixed;
+  min-height:100vh;
+}
 h1,h2,h3{font-family:"Playfair Display",Georgia,serif;letter-spacing:-.02em;line-height:1.2;margin:0}
 .container{max-width:1180px;margin:0 auto;padding:0 20px}
 a{color:var(--brand)}
 section{padding:26px 0}
 
 /* ---------- Header + ticker (asal) ---------- */
-header.site{position:sticky;top:0;z-index:50;background:rgba(246,247,246,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+header.site{position:sticky;top:0;z-index:50;background:rgba(244,246,245,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;flex-wrap:wrap}
 .brandbox{display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit}
 .brand-logo{width:56px;height:56px;object-fit:cover;border-radius:14px;display:block;border:1px solid var(--line)}
@@ -282,12 +302,14 @@ html[data-theme="dark"] .rp-reset{border-color:var(--line);color:var(--muted)}
 html[data-theme="dark"]{
   color-scheme:dark;
   --bg:#0A1410; --bg2:#101E18; --card:#111E18;
+  --poly:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27720%27%20height%3D%27720%27%20viewBox%3D%270%200%20720%20720%27%3E%3Cg%20fill%3D%27%234CC38A%27%3E%3Cpath%20fill-opacity%3D%27.055%27%20d%3D%27M0%200L180%200L180%20180ZM180%200L360%200L180%20180ZM360%200L540%200L540%20180ZM540%200L720%200L540%20180ZM0%20180L180%20180L0%20360ZM180%20180L360%20180L360%20360ZM360%20180L540%20180L360%20360ZM540%20180L720%20180L720%20360ZM0%20360L180%20360L180%20540ZM180%20360L360%20360L180%20540ZM360%20360L540%20360L540%20540ZM540%20360L720%20360L540%20540ZM0%20540L180%20540L0%20720ZM180%20540L360%20540L360%20720ZM360%20540L540%20540L360%20720ZM540%20540L720%20540L720%20720Z%27%2F%3E%3Cpath%20fill-opacity%3D%27.028%27%20d%3D%27M0%200L180%20180L0%20180ZM360%200L360%20180L180%20180ZM360%200L540%20180L360%20180ZM720%200L720%20180L540%20180ZM180%20180L180%20360L0%20360ZM180%20180L360%20360L180%20360ZM540%20180L540%20360L360%20360ZM540%20180L720%20360L540%20360ZM0%20360L180%20540L0%20540ZM360%20360L360%20540L180%20540ZM360%20360L540%20540L360%20540ZM720%20360L720%20540L540%20540ZM180%20540L180%20720L0%20720ZM180%20540L360%20720L180%20720ZM540%20540L540%20720L360%20720ZM540%20540L720%20720L540%20720Z%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  --poly-veil:linear-gradient(135deg, rgba(18,34,27,.55) 0%, rgba(10,20,16,.45) 100%);
   --brand:#4CC38A; --brand-deep:#0F3B2A; --brand2:#6FDCA1;
   --ink:#E7F0EA; --muted:#9BB2A6; --line:#24382E;
   --gold-bg:#2A2415; --gold-line:#6B5A24; --gold-ink:#F2D98B;
   --shadow:0 16px 40px rgba(0,0,0,.45);
 }
-html[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+html[data-theme="dark"] body{color:var(--ink)}
 html[data-theme="dark"] header.site{background:rgba(10,20,16,.92);border-bottom-color:var(--line)}
 html[data-theme="dark"] .company-name,
 html[data-theme="dark"] .brandname{color:#EAF3EE}

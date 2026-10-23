@@ -63,7 +63,7 @@ export default function Header({ onLogin, onTopUp, onRequestQuote }) {
       /* mod peribadi */
     }
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', next === 'dark' ? '#0A1410' : '#F6F7F6')
+    if (meta) meta.setAttribute('content', next === 'dark' ? '#0A1410' : '#F4F6F5')
   }
 
   const dark = theme === 'dark'
